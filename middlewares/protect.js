@@ -53,12 +53,12 @@ const adminProtect = (req, res, next) => {
 const authMiddleware = (req, res, next) => {
  
   const cookieToken = req.cookies?.token;
-  const headerToken = req.headers.authorization?.startsWith("Bearer ")
-    ? req.headers.authorization.split(" ")[1]
-    : null;
-  const token = cookieToken || headerToken;
+  // const headerToken = req.headers.authorization?.startsWith("Bearer ")
+  //   ? req.headers.authorization.split(" ")[1]
+  //   : null;
+  // const token = cookieToken || headerToken;
   // console.log(token,"|||||||||||||||||||||||||||||||")
-  // const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImQwMDQ4M2Q5LTUyMzAtNDk0NC05OTgzLTg1MzE4OWRkYjU5OCIsInJvbGUiOiJtYXN0ZXJfYWRtaW4iLCJpYXQiOjE3NzUyODIzMjEsImV4cCI6MTc3NTg4NzEyMX0.NwR3TF15U9-fmvrxa72WOB9AC06W7x0vzqiAd1h5oQc";
+  const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImQwMDQ4M2Q5LTUyMzAtNDk0NC05OTgzLTg1MzE4OWRkYjU5OCIsInJvbGUiOiJtYXN0ZXJfYWRtaW4iLCJpYXQiOjE3NzUyODIzMjEsImV4cCI6MTc3NTg4NzEyMX0.NwR3TF15U9-fmvrxa72WOB9AC06W7x0vzqiAd1h5oQc";
   
   if (!token) {
     return res.status(401).json({ message: "Unauthorized" });
