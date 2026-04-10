@@ -2,12 +2,13 @@ const express = require("express");
 const { signin } = require("../controllers/common/Authentication");
 const {  updateAdmin, profileImageUpload } = require("../controllers/admin");
 const { authMiddleware } = require("../middlewares/protect");
-const { signup } = require("../controllers/superAdmin");
+const { signup, getAllSuperAdmins } = require("../controllers/superAdmin");
 const { upload } = require("../controllers/common/multer");
 
 const superAdminRouter = express.Router();
 
 superAdminRouter.post("/sign-in", signin);
+superAdminRouter.get("/fetch-all", authMiddleware, getAllSuperAdmins);
 // Accept JSON or multipart/form-data (supports optional files)
 superAdminRouter.post(
   "/register",
