@@ -113,6 +113,7 @@ const getVendorBookings = async (req, res) => {
         vendor_services.price AS service_price,
         vendors.name AS vendor_name,
         users.name AS user_name,
+        users.phone AS user_phone,
         flats.flat_number AS flat_number,
         flats.floor AS floor,
         societies.name AS society_name,
