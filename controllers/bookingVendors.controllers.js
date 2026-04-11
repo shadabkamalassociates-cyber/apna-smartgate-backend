@@ -107,6 +107,8 @@ const getVendorBookings = async (req, res) => {
         service_bookings.booking_date AS booking_date,
         service_bookings.booking_time AS booking_time,
         service_bookings.address AS address,
+        service_bookings.status AS status,
+        service_bookings.created_at AS created_at,
         vendor_services.name AS service_name,
         vendor_services.price AS service_price,
         vendors.name AS vendor_name,
