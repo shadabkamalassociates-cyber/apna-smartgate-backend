@@ -81,7 +81,7 @@ const deleteVendorService = async (req, res) => {
   
       const result = await client.query(
         `SELECT * FROM vendor_services
-         WHERE vendor_id = $1 AND verification_status = 'approved'`,
+         WHERE vendor_id = $1`,
         [vendor_id]
       );
   
@@ -94,10 +94,19 @@ const deleteVendorService = async (req, res) => {
 const getServicesByVendorAll = async (req, res) => {
     try {
       const { vendor_id } = req.params;
-  
+      
+      const isVendorApproved = await client.query(
+        `SELECT * FROM vendors WHERE id = $1 and verification_status = 'approved'`,
+        [vendor_id]
+      );
+      
+      if(isVendorApproved.rows.length === 0){
+        return res.status(400).json({ message: "Not available!" });
+      }
+      
       const result = await client.query(
         `SELECT * FROM vendor_services
-         WHERE vendor_id = $1 AND verification_status = 'approved'`,
+         WHERE vendor_id = $1`,
         [vendor_id]
       );
   
