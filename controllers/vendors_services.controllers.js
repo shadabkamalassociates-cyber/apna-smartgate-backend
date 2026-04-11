@@ -81,7 +81,7 @@ const deleteVendorService = async (req, res) => {
   
       const result = await client.query(
         `SELECT * FROM vendor_services
-         WHERE vendor_id = $1 AND status = 'approved'`,
+         WHERE vendor_id = $1 AND verification_status = 'approved'`,
         [vendor_id]
       );
   
@@ -97,7 +97,7 @@ const getServicesByVendorAll = async (req, res) => {
   
       const result = await client.query(
         `SELECT * FROM vendor_services
-         WHERE vendor_id = $1 AND status = 'approved'`,
+         WHERE vendor_id = $1 AND verification_status = 'approved'`,
         [vendor_id]
       );
   
@@ -114,7 +114,7 @@ const getApprovedServices = async (req, res) => {
   
       const result = await client.query(
         `UPDATE vendor_services
-         SET status = $1
+         SET verification_status = $1
          WHERE id = $2
          RETURNING *`,
         [status, id]
@@ -152,7 +152,7 @@ const getServiceById = async (req, res) => {
 const getServices = async (req, res) => {
   try {
     const { rows } = await client.query(
-      "SELECT * FROM vendor_services WHERE status = 'approved'"
+      "SELECT * FROM vendor_services WHERE verification_status = 'approved'"
     );
 
     res.json(rows);
@@ -165,7 +165,7 @@ const getServicesByCategory = async (req, res) => {
   try {
     const { category } = req.params;
     const { rows } = await client.query(
-      "SELECT * FROM vendor_services WHERE category = $1 AND status = 'approved'",
+      "SELECT * FROM vendor_services WHERE category = $1 AND verification_status = 'approved'",
       [category]
     );
   }

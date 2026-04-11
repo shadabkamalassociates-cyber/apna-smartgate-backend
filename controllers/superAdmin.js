@@ -88,7 +88,7 @@ const getAllSuperAdmins = async (req, res) => {
       "SELECT * FROM admins WHERE role = 'super_admin' AND created_by = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3",
       [id, limit, offset],
     );
-    
+
     res.status(200).json({
       message: "Super Admins fetched successfully",
       secretaries: secretaries.rows,
@@ -101,4 +101,6 @@ const getAllSuperAdmins = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };  
+
+
 module.exports = { getAllSuperAdmins,signup }
