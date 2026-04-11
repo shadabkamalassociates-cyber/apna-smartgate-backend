@@ -96,11 +96,33 @@ const getResidentBookings = async (req, res) => {
 const getVendorBookings = async (req, res) => {
   try {
     const vendor_id = req.params.id;
- 
+    
     const result = await client.query(
-       `SELECT *
+      //  `SELECT *
+      //   FROM service_bookings
+      //   WHERE vendor_id = $1 
+      //   `,
+      `SELECT 
+        service_bookings.id AS booking_id,
+        service_bookings.booking_date AS booking_date,
+        service_bookings.booking_time AS booking_time,
+        service_bookings.address AS address,
+        vendor_services.name AS service_name,
+        vendor_services.price AS service_price,
+        vendors.name AS vendor_name,
+        users.name AS user_name,
+        flats.flat_number AS flat_number,
+        flats.floor AS floor,
+        societies.name AS society_name,
+        blocks.name AS block_name
         FROM service_bookings
-        WHERE vendor_id = $1`,
+        INNER JOIN vendor_services ON service_bookings.service_id = vendor_services.id
+        INNER JOIN vendors ON service_bookings.vendor_id = vendors.id
+        INNER JOIN users ON service_bookings.user_id = users.id
+        INNER JOIN flats ON users.flat_id = flats.id
+        INNER JOIN societies ON flats.society_id = societies.id
+        INNER JOIN blocks ON flats.block_id = blocks.id
+        WHERE vendors.id = $1`,
        [vendor_id]
     );
   
