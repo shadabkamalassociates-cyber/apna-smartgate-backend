@@ -161,7 +161,7 @@ const getServiceById = async (req, res) => {
 const getServices = async (req, res) => {
   try {
     const { rows } = await client.query(
-      "SELECT * FROM vendor_services WHERE verification_status = 'approved'"
+      "SELECT * FROM vendor_services WHERE status = 'approved'"
     );
 
     res.json(rows);

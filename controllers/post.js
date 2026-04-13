@@ -110,8 +110,8 @@ const createPostByOwner = async (req, res) => {
       return res.status(400).json({ message: req.fileValidationError });
     }
 
-    const { title, description } = req.body;
-    const imagesFromBody = req.body?.images;
+    const { title, description } = req.body;         
+    const imagesFromBody = req.body?.images;   
     const images =
       req.files?.length > 0
         ? req.files.map((f) =>
@@ -203,7 +203,7 @@ const createPostByResident = async (req, res) => {
     const images =
       req.files?.length > 0
         ? req.files.map((f) =>
-            path.posix.join("uploads", "post-images", f.filename),
+            path.posix.join("uploads", f.filename),
           )
         : imagesFromBody || [];
     const residentId = req.params.id;
