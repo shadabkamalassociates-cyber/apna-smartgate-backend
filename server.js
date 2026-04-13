@@ -103,7 +103,7 @@ app.use("/api/booking-vendors", bookingVendorsRouter);
 
 
 app.get("/",(req,res)=>{
-    res.send("Smart Society me apka swagat hai....")
+    res.send("Smart Society me apka swagat hai....❌")
 }) 
 
 const PORT = process.env.PORT || 5001
