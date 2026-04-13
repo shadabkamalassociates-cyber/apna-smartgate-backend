@@ -75,22 +75,7 @@ const deleteVendorService = async (req, res) => {
       res.status(500).json({ error: error.message });
     }
 };
- const getServicesByVendor = async (req, res) => {
-    try {
-      const { vendor_id } = req.params;
-  
-      const result = await client.query(
-        `SELECT * FROM vendor_services
-         WHERE vendor_id = $1`,
-        [vendor_id]
-      );
-  
-      res.json(result.rows);
-  
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-};
+
 const getServicesByVendorAll = async (req, res) => {
     try {
       const { vendor_id } = req.params;
@@ -160,11 +145,38 @@ const getServiceById = async (req, res) => {
 };
 const getServices = async (req, res) => {
   try {
+   const page = parseInt(req.query.page, 10) || 1;
+   const limit = parseInt(req.query.limit, 10) || 10;
+    
+   const offset = (page - 1) * limit
+
+  const totalResult = await client.query("SELECT COUNT(*) FROM vendor_services");
+  const total = parseInt(totalResult.rows[0].count, 10);
+
+    // get paginated data
     const { rows } = await client.query(
-      "SELECT * FROM vendor_services WHERE status = 'approved'"
+      `SELECT  
+      vs.*, 
+      v.name AS vendors_name,
+      v.email AS vendors_email,
+      v.phone_1 AS vendors_phone
+      FROM vendor_services vs
+      LEFT JOIN vendors v
+      ON vs.vendor_id = v.id
+      ORDER BY vs.id DESC
+      LIMIT $1 OFFSET $2`,
+      [limit, offset]
     );
 
-    res.json(rows);
+    res.json({
+      data: rows,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     console.error(error); 
     res.status(500).json({ message: "Server error" });
@@ -224,7 +236,7 @@ module.exports = {
     getServicesByCategory,
     updateVendorService,
     deleteVendorService,
-    getServicesByVendor,
+  
     getServicesByVendorAll,
     getApprovedServices,
     getVendorsByCategory,
