@@ -56,9 +56,9 @@ function parseAmenities(raw) {
   }
   return null;
 }
-
 const createSocietyByOwner = async (req, res) => {
   try {
+    // 🔴 File validation
     if (req.fileValidationError) {
       return res.status(400).json({
         success: false,
@@ -67,6 +67,8 @@ const createSocietyByOwner = async (req, res) => {
     }
 
     const b = req.body;
+
+    // 🔴 Required field
     const name = b.name?.trim();
     if (!name) {
       return res.status(400).json({
@@ -75,19 +77,49 @@ const createSocietyByOwner = async (req, res) => {
       });
     }
 
-    const created_by_admin = req.user.id;
+    // 🔴 Auth user
+    const created_by_admin = req.user?.id || null;
+
+    // 🔴 Logo handling
     const logo_url = req.file
       ? path.posix.join("uploads", "society-logos", req.file.filename)
       : b.logo_url ?? null;
 
-    const amenities = parseAmenities(b.amenities);
-    if (b.amenities && amenities === null && typeof b.amenities === "string") {
-      return res.status(400).json({
-        success: false,
-        message: "amenities must be valid JSON",
-      });
+    // =========================
+    // ✅ AMENITIES PARSER (STRONG)
+    // =========================
+    let amenities = null;
+
+    if (b.amenities) {
+      if (Array.isArray(b.amenities)) {
+        // Already array (rare case)
+        amenities = b.amenities;
+      } else if (typeof b.amenities === "string") {
+        try {
+          // Try JSON parse first
+          amenities = JSON.parse(b.amenities);
+        } catch (err) {
+          // Fallback: comma-separated string
+          amenities = b.amenities
+            .split(",")
+            .map((a) => a.trim())
+            .filter((a) => a.length > 0);
+        }
+      }
+
+      // Final validation
+      if (!Array.isArray(amenities)) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "amenities must be JSON array or comma-separated string",
+        });
+      }
     }
 
+    // =========================
+    // ✅ INSERT QUERY
+    // =========================
     const newSociety = await client.query(
       `INSERT INTO societies (
         name, address, created_by_admin,
@@ -123,9 +155,9 @@ const createSocietyByOwner = async (req, res) => {
         parseOptionalNumeric(b.longitude),
         logo_url,
         b.description ?? null,
-        amenities,
+        amenities ? JSON.stringify(amenities) : null, // ✅ IMPORTANT
         b.status ?? "PENDING",
-      ],
+      ]
     );
 
     return res.status(201).json({
@@ -133,14 +165,102 @@ const createSocietyByOwner = async (req, res) => {
       message: "Society created successfully",
       society: newSociety.rows[0],
     });
+
   } catch (error) {
-    console.error(error);
+    console.error("Create Society Error:", error);
+
     return res.status(500).json({
       success: false,
       message: "Server error",
     });
   }
 };
+// const createSocietyByOwner = async (req, res) => {
+//   try {
+//     if (req.fileValidationError) {
+//       return res.status(400).json({
+//         success: false,
+//         message: req.fileValidationError,
+//       });
+//     }
+
+//     const b = req.body;
+//     const name = b.name?.trim();
+//     if (!name) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "name is required",
+//       });
+//     }
+
+//     const created_by_admin = req.user.id;
+//     const logo_url = req.file
+//       ? path.posix.join("uploads", "society-logos", req.file.filename)
+//       : b.logo_url ?? null;
+
+//     const amenities = parseAmenities(b.amenities);
+//     if (b.amenities && amenities === null && typeof b.amenities === "string") {
+//       return res.status(400).json({
+//         success: false,
+//         message: "amenities must be valid JSON",
+//       });
+//     }
+
+//     const newSociety = await client.query(
+//       `INSERT INTO societies (
+//         name, address, created_by_admin,
+//         city, state, country, pincode,
+//         contact_phone, contact_email, website, registration_number,
+//         total_blocks, total_flats, year_established,
+//         latitude, longitude, logo_url, description, amenities, status
+//       )
+//       VALUES (
+//         $1, $2, $3,
+//         $4, $5, $6, $7,
+//         $8, $9, $10, $11,
+//         $12, $13, $14,
+//         $15, $16, $17, $18, $19::jsonb, $20::society_status
+//       )
+//       RETURNING *`,
+//       [
+//         name,
+//         b.address ?? null,
+//         created_by_admin,
+//         b.city ?? null,
+//         b.state ?? null,
+//         b.country ?? "India",
+//         b.pincode ?? null,
+//         b.contact_phone ?? null,
+//         b.contact_email ?? null,
+//         b.website ?? null,
+//         b.registration_number ?? null,
+//         parseOptionalInt(b.total_blocks),
+//         parseOptionalInt(b.total_flats),
+//         parseOptionalInt(b.year_established),
+//         parseOptionalNumeric(b.latitude),
+//         parseOptionalNumeric(b.longitude),
+//         logo_url,
+//         b.description ?? null,
+//         amenities,
+//         b.status ?? "PENDING",
+//       ],
+//     );
+
+//     return res.status(201).json({
+//       success: true,
+//       message: "Society created successfully",
+//       society: newSociety.rows[0],
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Server error",
+//     });
+//   }
+// };
+
+
 
 const fetchSocietyByOwner = async (req, res) => {
   try {

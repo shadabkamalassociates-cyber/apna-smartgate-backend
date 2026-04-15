@@ -6,7 +6,7 @@ const signup = async (req, res) => {
   try {
     const role = "super_admin"
     console.log(req.user)
-    const { name, email, phone, password, address_line1, address_line2, gender } =
+    const { name, email, phone, password,created_by, address_line1, address_line2, gender } =
       req.body || {};
     const { id } = req.user
 
@@ -53,7 +53,7 @@ const signup = async (req, res) => {
         phone,
         hashedPassword,
         role,
-        id,
+        created_by,  // ✅ FIXED
         aadhar_photo,
         address_line1 ?? null,
         address_line2 ?? null,

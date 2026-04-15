@@ -55,6 +55,7 @@ const getAllGuards = async (req, res) => {
     const result = await client.query(
       `SELECT 
         g.id,
+        g.password,
         g.name,
         g.email,
         g.society_id,

@@ -28,6 +28,7 @@ const vendorsRouter = require('./routers/vendors.routers')
 const vendorsServicesRouter = require('./routers/vendors_services.routers')
 const bookingVendorsRouter = require('./routers/bookingVendors.routers')
 const ticketRouter = require('./routers/ticket.router')
+const eventsRouter = require("./routers/events.routes");
 
 const app = express()
 app.use(express.urlencoded({ extended: true }));
@@ -100,6 +101,7 @@ app.use("/api/vendors-services", vendorsServicesRouter);
 app.use("/api/flats", flatRouter);
 app.use("/api/notice", noticeRouter);
 app.use("/api/booking-vendors", bookingVendorsRouter);
+app.use("/api/events", eventsRouter);
 
 
 app.get("/",(req,res)=>{
