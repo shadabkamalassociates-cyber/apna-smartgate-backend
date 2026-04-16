@@ -148,7 +148,7 @@ const updateSecretary = async (req, res) => {
             phone,
             path.posix.join(
               "uploads",
-              "secretary-profile-images",
+              
               req.file.filename,
             ),
             id,

@@ -101,7 +101,7 @@ const signupGuard = async (req, res) => {
     const { name, email, password, society_id } = req.body;
 
     const profile_image = req.file
-      ? path.posix.join("uploads", "guard-profile-images", req.file.filename)
+      ? path.posix.join("uploads", req.file.filename)
       : req.body.profile_image ?? null;
 
     const existingUser = await client.query(
@@ -193,6 +193,7 @@ const signinGuard = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 const deleteGuardByUuid = async (req, res) => {
   try {
     const { id } = req.params;
@@ -234,6 +235,7 @@ const deleteGuardByUuid = async (req, res) => {
     });
   }
 };
+
 const validation= async (req,res)=>{
 try {
   const { name, email, password, confirmPassword } = req.body;
@@ -289,6 +291,8 @@ const fetchGuardsBySociety = async (req, res) => {
 };
 const updateGaurd = async (req, res) => {
   try {
+    const { id } = req.params; // guard id from URL
+
     if (req.fileValidationError) {
       return res.status(400).json({
         success: false,
@@ -296,52 +300,65 @@ const updateGaurd = async (req, res) => {
       });
     }
 
-    const { uuid } = req.params;
-    const { name, email, phone } = req.body;
+    const { name, email, password, society_id } = req.body;
 
-    const result = req.file
-      ? await client.query(
-          `UPDATE guards
-           SET name = $1, email = $2, phone = $3,
-               profile_image = $4
-           WHERE uuid = $5
-           RETURNING id, name, email, phone, profile_image, society_id`,
-          [
-            name,
-            email,
-            phone,
-            path.posix.join("uploads", "guard-profile-images", req.file.filename),
-            uuid,
-          ],
-        )
-      : await client.query(
-          `UPDATE guards
-           SET name = $1, email = $2, phone = $3
-           WHERE uuid = $4
-           RETURNING id, name, email, phone, profile_image, society_id`,
-          [name, email, phone, uuid],
-        );
+    // handle profile image
+    const profile_image = req.file
+      ? path.posix.join("uploads", req.file.filename)
+      : req.body.profile_image ?? null;
 
-    if (result.rowCount === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Guard not found",
-      });
+    // check if guard exists
+    const existingGuard = await client.query(
+      "SELECT * FROM guards WHERE id = $1",
+      [id]
+    );
+
+    if (existingGuard.rows.length === 0) {
+      return res.status(404).json({ message: "Guard not found" });
     }
 
+    // check email conflict (if email is being updated)
+    if (email) {
+      const emailCheck = await client.query(
+        "SELECT * FROM guards WHERE email = $1 AND id != $2",
+        [email, id]
+      );
+
+      if (emailCheck.rows.length > 0) {
+        return res.status(400).json({ message: "Email already in use" });
+      }
+    }
+
+    // hash password only if provided
+    let hashedPassword = existingGuard.rows[0].password;
+    if (password) {
+      hashedPassword = await bcrypt.hash(password, 2);
+    }
+
+    // update query
+    const updatedGuard = await client.query(
+      `UPDATE guards SET
+        name = COALESCE($1, name),
+        email = COALESCE($2, email),
+        password = $3,
+        society_id = COALESCE($4, society_id),
+        profile_image = COALESCE($5, profile_image),
+        updated_at = NOW()
+       WHERE id = $6
+       RETURNING id, name, email, society_id, profile_image`,
+      [name, email, hashedPassword, society_id, profile_image, id]
+    );
+
     return res.status(200).json({
-      success: true,
       message: "Guard updated successfully",
-      data: result.rows[0],
+      user: updatedGuard.rows[0],
     });
+
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
   }
-};
+};  
 module.exports = {
   validation,
   getAllGuards,

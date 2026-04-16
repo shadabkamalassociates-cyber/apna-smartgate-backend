@@ -62,7 +62,7 @@ const usersOnboard = async (req, res) => {
     } = req.body;
 
     const profile_image = req.file
-      ? path.posix.join("uploads", "resident-profile-images", req.file.filename)
+      ? path.posix.join("uploads", req.file.filename)
       : req.body.profile_image ?? null;
 
     const hashPasword = await bcrypt.hash(password, 3);
@@ -361,7 +361,7 @@ const updateresident = async (req, res) => {
     const { name, email, phone_number } = req.body;
 
     const profilePath = req.file
-      ? path.posix.join("uploads", "resident-profile-images", req.file.filename)
+      ? path.posix.join("uploads", req.file.filename)
       : null;
 
     const result = req.file

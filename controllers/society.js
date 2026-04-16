@@ -82,7 +82,7 @@ const createSocietyByOwner = async (req, res) => {
 
     // 🔴 Logo handling
     const logo_url = req.file
-      ? path.posix.join("uploads", "society-logos", req.file.filename)
+      ? path.posix.join("uploads", req.file.filename)
       : b.logo_url ?? null;
 
     // =========================
@@ -387,7 +387,7 @@ const updateSocietyByOwner = async (req, res) => {
     if (req.file) {
       sets.push(`logo_url = $${i}`);
       vals.push(
-        path.posix.join("uploads", "society-logos", req.file.filename),
+        path.posix.join("uploads", req.file.filename),
       );
       i += 1;
     } else if (b.logo_url !== undefined) {

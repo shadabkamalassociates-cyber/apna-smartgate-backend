@@ -52,7 +52,7 @@ const createBySociety = async (req, res) => {
     const { society_id } = req.params;
 
     const profile_image = req.file
-      ? path.posix.join("uploads", "essential-contact-images", req.file.filename)
+      ? path.posix.join("uploads", req.file.filename)
       : req.body.profile_image ?? null;
 
     if (!designation) {

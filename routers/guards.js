@@ -13,12 +13,13 @@ routerGuards.post(
   signupGuard,
 );
 routerGuards.post(
-  "/update/:uuid",
+  "/update/:id",
   upload.single("profile_image"),
   // guardProfileUpload.single("profile_image"),
   updateGaurd,
 );
 routerGuards.post("/login", signinGuard);
+// routerGuards.put("/update/:id", updateGaurd);
 routerGuards.get("/fetch",authMiddleware, getAllGuards);
 routerGuards.get("/validation", validation);
 routerGuards.delete("/delete/:uuid", authMiddleware, deleteGuardByUuid);
