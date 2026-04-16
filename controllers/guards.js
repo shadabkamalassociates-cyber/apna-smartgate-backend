@@ -104,6 +104,13 @@ const signupGuard = async (req, res) => {
       ? path.posix.join("uploads", req.file.filename)
       : req.body.profile_image ?? null;
 
+    if (!name || !email || !password || !society_id) {
+      return res.status(400).json({
+        success: false,
+        message: "name, email, password, and society_id are required",
+      });
+    }
+
     const existingUser = await client.query(
       "SELECT * FROM guards WHERE email = $1",
       [email],

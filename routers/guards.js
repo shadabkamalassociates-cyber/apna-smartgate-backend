@@ -5,16 +5,26 @@ const { signup, signin } = require("../controllers/common/Authentication");
 const { upload } = require("../controllers/common/multer");
 
 const routerGuards = express.Router();
+
+function maybeUploadSingle(fieldName) {
+  return (req, res, next) => {
+    const ct = req.headers["content-type"] || "";
+    if (ct.includes("multipart/form-data")) {
+      return upload.single(fieldName)(req, res, next);
+    }
+    return next();
+  };
+}
     
 routerGuards.post(
   "/signup",
-  upload.single("profile_image"),
+  maybeUploadSingle("profile_image"),
   // guardProfileUpload.single("profile_image"),
   signupGuard,
 );
 routerGuards.post(
   "/update/:id",
-  upload.single("profile_image"),
+  maybeUploadSingle("profile_image"),
   // guardProfileUpload.single("profile_image"),
   updateGaurd,
 );
