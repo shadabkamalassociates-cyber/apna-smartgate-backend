@@ -205,19 +205,14 @@ const deleteGuardByUuid = async (req, res) => {
   try {
     const { id } = req.params;
 
+    const result = await client.query("DELETE FROM guards WHERE id = $1", [id]);
 
-    const existing = await client.query("SELECT id FROM guards WHERE id = $1", [
-      id,
-    ]);
-
-    if (existing.rows.length === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({
         success: false,
         message: "Guard not found",
       });
     }
-
-    await client.query("DELETE FROM guards WHERE id = $1", [id]);
 
     return res.status(200).json({
       success: true,
