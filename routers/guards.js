@@ -32,7 +32,7 @@ routerGuards.post("/login", signinGuard);
 // routerGuards.put("/update/:id", updateGaurd);
 routerGuards.get("/fetch",authMiddleware, getAllGuards);
 routerGuards.get("/validation", validation);
-routerGuards.delete("/delete/:uuid", authMiddleware, deleteGuardByUuid);
+routerGuards.delete("/delete/:id", authMiddleware, deleteGuardByUuid);
 routerGuards.get("/authenticate",  checkAuthentication);
 routerGuards.get("/fetch-by-society/:society_id", fetchGuardsBySociety);
 module.exports = routerGuards;

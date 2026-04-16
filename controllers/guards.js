@@ -204,7 +204,7 @@ const signinGuard = async (req, res) => {
 const deleteGuardByUuid = async (req, res) => {
   try {
     const { id } = req.params;
-
+    console.log(id);
     const result = await client.query("DELETE FROM guards WHERE id = $1", [id]);
 
     if (result.rowCount === 0) {
