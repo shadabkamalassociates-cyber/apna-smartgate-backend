@@ -116,73 +116,144 @@ const signup = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
-
-
 const updateSecretary = async (req, res) => {
   try {
-    if (req.fileValidationError) {
-      return res.status(400).json({
-        success: false,
-        message: req.fileValidationError,
-      });
-    }
-
     const { id } = req.params;
-    const { name, email, phone } = req.body;
 
-    const result = req.file
-      ? await client.query(
-          `
-      UPDATE admins
-      SET name = $1,
-          email = $2,
-          phone = $3,
-          profile_image = $4,
-          updated_at = CURRENT_TIMESTAMP
-      WHERE id = $5
-      RETURNING ${ADMIN_PUBLIC_FIELDS}
-    `,
-          [
-            name,
-            email,
-            phone,
-            path.posix.join(
-              "uploads",
-              
-              req.file.filename,
-            ),
-            id,
-          ],
-        )
-      : await client.query(
-          `
-      UPDATE admins
-      SET name = $1,
-          email = $2,
-          phone = $3,
-          updated_at = CURRENT_TIMESTAMP
-      WHERE id = $4
-      RETURNING ${ADMIN_PUBLIC_FIELDS}
-    `,
-          [name, email, phone, id],
-        );
+    const {
+      name,
+      email,
+      phone,
+      address_line1,
+      address_line2,
+      gender,
+    } = req.body;
 
-    if (result.rowCount === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Secretary not found",
-      });
+    // files
+    const profileFile = req.files?.profile_image?.[0] || null;
+    const aadharFile = req.files?.aadhar_photo?.[0] || null;
+
+    const profile_image = profileFile
+      ? path.posix.join("uploads", profileFile.filename)
+      : null;
+
+    const aadhar_photo = aadharFile
+      ? path.posix.join("uploads", aadharFile.filename)
+      : null;
+
+    // check if admin exists
+    const existing = await client.query(
+      "SELECT * FROM admins WHERE id = $1",
+      [id]
+    );
+
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ message: "Admin not found" });
     }
 
-    return res.json({
-      success: true,
-      admin: result.rows[0],
+    // update query
+    const updatedUser = await client.query(
+      `UPDATE admins SET
+        name = COALESCE($1, name),
+        email = COALESCE($2, email),
+        phone = COALESCE($3, phone),
+        address_line1 = COALESCE($4, address_line1),
+        address_line2 = COALESCE($5, address_line2),
+        gender = COALESCE($6, gender),
+        profile_image = COALESCE($7, profile_image),
+        aadhar_photo = COALESCE($8, aadhar_photo),
+        updated_at = NOW()
+       WHERE id = $9
+       RETURNING id, name, email, phone, profile_image`,
+      [
+        name || null,
+        email || null,
+        phone || null,
+        address_line1 || null,
+        address_line2 || null,
+        gender || null,
+        profile_image,
+        aadhar_photo,
+        id,
+      ]
+    );
+
+    res.status(200).json({
+      message: "Admin updated successfully",
+      user: updatedUser.rows[0],
     });
+
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ error: "Failed to update admin" });
+    res.status(500).json({ message: "Server error" });
   }
 };
+
+// const updateSecretary = async (req, res) => {
+//   try {
+//     if (req.fileValidationError) {
+//       return res.status(400).json({
+//         success: false,
+//         message: req.fileValidationError,
+//       });
+//     }
+
+//     const { id } = req.params;
+//     const { name, email, phone } = req.body;
+
+//     const result = req.file
+//       ? await client.query(
+//           `
+//       UPDATE admins
+//       SET name = $1,
+//           email = $2,
+//           phone = $3,
+//           profile_image = $4,
+//           updated_at = CURRENT_TIMESTAMP
+//       WHERE id = $5
+//       RETURNING ${ADMIN_PUBLIC_FIELDS}
+//     `,
+//           [
+//             name,
+//             email,
+//             phone,
+//             path.posix.join(
+//               "uploads",
+              
+//               req.file.filename,
+//             ),
+//             id,
+//           ],
+//         )
+//       : await client.query(
+//           `
+//       UPDATE admins
+//       SET name = $1,
+//           email = $2,
+//           phone = $3,
+//           updated_at = CURRENT_TIMESTAMP
+//       WHERE id = $4
+//       RETURNING ${ADMIN_PUBLIC_FIELDS}
+//     `,
+//           [name, email, phone, id],
+//         );
+
+//     if (result.rowCount === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Secretary not found",
+//       });
+//     }
+
+//     return res.json({
+//       success: true,
+//       admin: result.rows[0],
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({ error: "Failed to update admin" });
+//   }
+// };
 const updateStatusSecretary = async (req, res) => {
   try {
     const { id } = req.params;
