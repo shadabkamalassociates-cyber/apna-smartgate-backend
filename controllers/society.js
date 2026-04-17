@@ -65,7 +65,9 @@ const createSocietyByOwner = async (req, res) => {
         message: req.fileValidationError,
       });
     }
-
+    console.log(req.body,"++++++++++++++++++++++++");
+    console.log(req.file,"++++++++++++++++++++++++");
+    console.log(req.user,"++++++++++++++++++++++++");
     const b = req.body;
 
     // 🔴 Required field
@@ -78,7 +80,7 @@ const createSocietyByOwner = async (req, res) => {
     }
 
     // 🔴 Auth user
-    const created_by_admin = req.user?.id || null;
+    const created_by_admin = req.body.created_by || null;
 
     // 🔴 Logo handling
     const logo_url = req.file

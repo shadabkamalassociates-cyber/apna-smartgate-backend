@@ -85,8 +85,8 @@ const getAllSuperAdmins = async (req, res) => {
     const totalCount = parseInt(countResult.rows[0].count, 10);
 
     const secretaries = await client.query(
-      "SELECT * FROM admins WHERE role = 'super_admin' AND created_by = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3",
-      [id, limit, offset],
+      "SELECT * FROM admins WHERE role = 'super_admin' ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+      [ limit, offset],
     );
 
     res.status(200).json({
