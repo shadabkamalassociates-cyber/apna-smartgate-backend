@@ -50,7 +50,7 @@ const signup = async (req, res) => {
         message: req.fileValidationError,
       });
     }
-
+    console.log(req.user,"++++++++++++++++++++++++")
     const { name, email, phone, password, role, society_id, address_line1, address_line2, gender } =
       req.body;
     const { id } = req.user;
@@ -116,6 +116,7 @@ const signup = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
+
 const updateSecretary = async (req, res) => {
   try {
     const { id } = req.params;
