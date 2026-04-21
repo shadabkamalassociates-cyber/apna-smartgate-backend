@@ -175,12 +175,12 @@ const getVisitorById = async (req, res) => {
 
 const createVisitor = async (req, res) => {
   try {
-    const { name, phone, vehicleinfo, resident_id, check_in, societyId } = req.body;
+    const { name, phone, vehicleinfo, flat_id, check_in, societyId } = req.body;
 
-    if (!name || !phone || !resident_id || !societyId) {
+    if (!name || !phone || !flat_id || !societyId) {
       return res.status(400).json({
         success: false,
-        message: "Name, phone, resident_id and societyId are required",
+        message: "Name, phone, flat_id and societyId are required",
       });
     }
 
@@ -197,10 +197,10 @@ const createVisitor = async (req, res) => {
     // 2️⃣ Create attendance record
     const attendanceResult = await client.query(
       `INSERT INTO visitor_attendance 
-       (check_in, visitor_id, status, resident_id, society_id)
+       (check_in, visitor_id, status, flat_id, society_id)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [check_in || new Date(), visitor.id, "waiting", resident_id, societyId]
+      [check_in || new Date(), visitor.id, "waiting", flat_id, societyId]
     );
 
     const attendance = attendanceResult.rows[0];
@@ -234,16 +234,16 @@ const createVisitor = async (req, res) => {
 
 const reEnteryVisitor = async (req, res) => {
   try {
-    const { visitor_id, resident_id,societyId } = req.body;
+    const { visitor_id, flat_id,societyId } = req.body;
     if(!societyId){
       return res.status(400).json({
         success: false,
-        message: "Society ID is required visitor_id, resident_id and societyId are required",
+        message: "Society ID is required visitor_id, flat_id and societyId are required",
       });
     }
     const result = await client.query(
       `INSERT INTO visitor_attendance 
-      (visitor_id, check_in, resident_id, society_id)
+      (visitor_id, check_in, flat_id, society_id)
       VALUES ($1, NOW(), $2, $3)
       RETURNING *`,
       [visitor_id, resident_id, societyId],
@@ -266,10 +266,10 @@ const reEnteryVisitor = async (req, res) => {
 const updateVisitor = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, phone, vehicleinfo, resident_id } = req.body;
+    const { name, phone, vehicleinfo, flat_id } = req.body;
     const result = await client.query(
-      "UPDATE visitors SET name=$1, phone=$2, vehicleinfo=$3, resident_id=$4 WHERE id=$5 RETURNING *",
-      [name, phone, vehicleinfo, resident_id, id],
+      "UPDATE visitors SET name=$1, phone=$2, vehicleinfo=$3, flat_id=$4 WHERE id=$5 RETURNING *",
+      [name, phone, vehicleinfo, flat_id, id],
     );
     if (result.rows.length === 0)
       return res.status(404).send("Visitor not found");
@@ -296,11 +296,11 @@ const deleteVisitor = async (req, res) => {
 };
 const getVisitorsByResident = async (req, res) => {
   try {
-    const { resident_id } = req.params;
+    const { flat_id } = req.params;
 
     const residentCheck = await client.query(
       "SELECT id FROM users WHERE id = $1",
-      [resident_id],
+      [flat_id],
     );
 
     if (residentCheck.rows.length === 0) {
@@ -311,8 +311,8 @@ const getVisitorsByResident = async (req, res) => {
     }
 
     const attendanceResult = await client.query(
-      "SELECT * FROM visitor_attendance WHERE resident_id = $1",
-      [resident_id],
+      "SELECT * FROM visitor_attendance WHERE flat_id = $1",
+      [flat_id],
     );
 
     const attendanceData = attendanceResult.rows;
@@ -346,7 +346,7 @@ const getVisitorsByResident = async (req, res) => {
               name: visitor.name,
               phone: visitor.phone,
               vehicleinfo: visitor.vehicleinfo,
-              resident_id: visitor.resident_id,
+              flat_id: visitor.flat_id,
             }
           : null,
       });

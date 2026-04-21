@@ -3,7 +3,7 @@ const {  allowGetpass, denyGetpass, sendResidenceAlert, getpassApproval, updateF
 const alertRouter= express.Router()
 
 
-alertRouter.post("/send-notification", sendResidenceAlert);
+alertRouter.post("/send-notification", sene.dResidenceAlert);
 alertRouter.put("/approve-gatepass", getpassApproval);
 alertRouter.put("/update-fcm",updateFcm);
 // alertRouter.put("/deny-gatepass",denyGetpass);

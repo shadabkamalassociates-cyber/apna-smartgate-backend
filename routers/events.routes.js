@@ -1,6 +1,6 @@
 const express = require("express");
 const { createEvent, getEvents, updateEvent, deleteEvent, getEventsBySociety } = require("../controllers/events.controller");
-const eventRouter = express.Router();
+const eventRouter = express.Router();        
 
 
 
