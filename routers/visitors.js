@@ -11,6 +11,6 @@ visitorsRouter.post("/create", createVisitor);
 visitorsRouter.post("/re-entry", reEnteryVisitor);
 visitorsRouter.put("/update", updateVisitor);
 visitorsRouter.delete("/delete/:id", deleteVisitor);
-visitorsRouter.get("/get/:resident_id", getVisitorsByResident);
+visitorsRouter.get("/get/:flat_id", getVisitorsByResident);
 
 module.exports = {visitorsRouter}
