@@ -299,14 +299,14 @@ const getVisitorsByResident = async (req, res) => {
     const { flat_id } = req.params;
 
     const residentCheck = await client.query(
-      "SELECT id FROM users WHERE id = $1",
+      "SELECT id FROM flats WHERE id = $1",
       [flat_id],
     );
 
     if (residentCheck.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Resident not found",
+        message: "Flat not found",
       });
     }
 
@@ -356,7 +356,7 @@ const getVisitorsByResident = async (req, res) => {
       success: true,
       message: "Visitors fetched successfully",
       data: visitorsData,
-    });
+    });               
   } catch (err) {
     console.error("Get Visitors Error:", err);
     return res.status(500).json({
