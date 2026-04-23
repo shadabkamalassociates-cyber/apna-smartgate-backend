@@ -109,45 +109,31 @@ ORDER BY v.id DESC;
     res.status(500).json({ message: "Server error" });
   }
 };
-
 const fetchVisitorsBySociety = async (req, res) => {
   try {
     const { societyId } = req.params;
 
     const result = await client.query(
       `SELECT 
-        va.check_in,
-        va.check_out,
-        va.status,
-        v.name AS visitor_name,
-        v.phone AS visitor_phone,
-        v.id AS visitor_id,
-        v.vehicleinfo,
-        u.id AS resident_id,
-        u.name AS resident_name,
-        u.phone AS resident_phone,
-        f.flat_number,
-        f.floor,
-        s.id AS society_id,
-        s.name AS society_name
-      FROM visitor_attendance va
-      LEFT JOIN visitors v ON v.id = va.visitor_id
-      LEFT JOIN users u ON u.id = va.resident_id
-      LEFT JOIN flats f ON f.id = u.flat_id
-      LEFT JOIN societies s ON s.id = va.society_id
-      WHERE va.society_id = $1
-      ORDER BY va.check_in DESC`,
-      [societyId]
+   va.*,
+   f.flat_number,
+   f.floor,
+   v.name,
+   v.phone,
+   v.vehicleinfo
+FROM visitor_attendance va 
+JOIN flats f
+   ON va.flat_id = f.id 
+  JOIN visitors v
+   ON va.visitor_id = v.id
+WHERE va.society_id = $1;`,
+      [societyId],
     );
 
-    console.log(result.rows);  
-
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
-      count: result.rows.length,
       data: result.rows,
     });
-
   } catch (error) {
     console.error("ERROR:", error);
     res.status(500).json({
@@ -156,7 +142,6 @@ const fetchVisitorsBySociety = async (req, res) => {
     });
   }
 };
-
 const getVisitorById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -172,7 +157,6 @@ const getVisitorById = async (req, res) => {
     res.status(500).send("Server Error");
   }
 };
-
 const createVisitor = async (req, res) => {
   try {
     const { name, phone, vehicleinfo, flat_id, check_in, societyId } = req.body;
@@ -231,7 +215,6 @@ const createVisitor = async (req, res) => {
     });
   }
 };
-
 const reEnteryVisitor = async (req, res) => {
   try {
     const { visitor_id, flat_id,societyId } = req.body;

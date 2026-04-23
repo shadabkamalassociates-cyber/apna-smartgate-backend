@@ -1,77 +1,170 @@
 const { client } = require("../config/client");
+// const Razorpay = require("razorpay");
 
-const bookVendorService = async (req, res) => {
-    try {
-      const {
-        user_id,
-        vendor_id,
-        service_id,
-        booking_date,
-        booking_time,
-        address
-      } = req.body;
-  
-      if (!user_id || !vendor_id || !service_id || !booking_date || !booking_time) {
-        return res.status(400).json({
-          message: "Missing required fields"
-        });
-      }
-  
-      const resident = await client.query(
-        "SELECT id FROM users WHERE id = $1",
-        [user_id]
-      );
-  
-      if (resident.rows.length === 0) {
-        return res.status(404).json({ message: "Resident not found" });
-      }
-  
-      const vendor = await client.query(
-        "SELECT id FROM vendors WHERE id = $1",
-        [vendor_id]
-      );
-  
-      if (vendor.rows.length === 0) {
-        return res.status(404).json({ message: "Vendor not found" });
-      }
-  
-      const existingBooking = await client.query(
-        `SELECT id FROM service_bookings
-         WHERE vendor_id = $1
-         AND booking_date = $2
-         AND booking_time = $3`,
-        [vendor_id, booking_date, booking_time]
-      );
-  
-      if (existingBooking.rows.length > 0) {
-        return res.status(409).json({
-          message: "Vendor already booked for this time slot"
-        });
-      }
-  
-      // 5️⃣ Insert booking
-      const result = await client.query(
-        `INSERT INTO service_bookings
-         (user_id, vendor_id, service_id, booking_date, booking_time, address)
-         VALUES ($1,$2,$3,$4,$5,$6)
-         RETURNING *`,
-        [user_id, vendor_id, service_id, booking_date, booking_time, address]
-      );
-  
-      res.status(201).json({
-        message: "Service booked successfully",
-        booking: result.rows[0]
-      });
-  
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({
-        message: "Internal server error",
-        error: error.message
-      });
-    }
-};
+// const razorpay = new Razorpay({
+//   key_id: process.env.RAZORPAY_KEY,
+//   key_secret: process.env.RAZORPAY_SECRET,
+// });
+// const crypto = require("crypto");
+// const bookVendorService = async (req, res) => {
+//   try {
+//     const {
+//       user_id,
+//       vendor_id,
+//       service_id,
+//       booking_date,
+//       booking_time,
+//       address,
+//       amount
+//     } = req.body;
 
+//     if (!user_id || !vendor_id || !service_id || !booking_date || !booking_time || !amount) {
+//       return res.status(400).json({ message: "Missing required fields" });
+//     }
+
+//     // 🔒 Check slot availability
+//     const existing = await client.query(
+//       `SELECT id FROM service_bookings
+//        WHERE vendor_id = $1
+//        AND booking_date = $2
+//        AND booking_time = $3
+//        AND status IN ('pending', 'confirmed')`,
+//       [vendor_id, booking_date, booking_time]
+//     );
+
+//     if (existing.rows.length > 0) {
+//       return res.status(409).json({
+//         message: "Vendor already booked for this time slot"
+//       });
+//     }
+
+//     // 🧾 Create booking
+//     const bookingRes = await client.query(
+//       `INSERT INTO service_bookings
+//        (user_id, vendor_id, service_id, booking_date, booking_time, address, status, amount)
+//        VALUES ($1,$2,$3,$4,$5,$6,'pending',$7)
+//        RETURNING *`,
+//       [user_id, vendor_id, service_id, booking_date, booking_time, address, amount]
+//     );
+
+//     const booking = bookingRes.rows[0];
+
+//     // 💳 Create payment entry
+//     const paymentRes = await client.query(
+//       `INSERT INTO payments (booking_id, amount, status, payment_gateway)
+//        VALUES ($1, $2, 'pending', 'razorpay')
+//        RETURNING *`,
+//       [booking.id, amount]
+//     );
+
+//     res.status(201).json({
+//       message: "Booking created. Proceed to payment",
+//       booking,
+//       payment: paymentRes.rows[0]
+//     });
+
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+
+
+
+
+// const createPaymentOrder = async (req, res) => {
+//   try {
+//     const { booking_id } = req.body;
+
+//     const booking = await client.query(
+//       `SELECT amount FROM service_bookings WHERE id = $1`,
+//       [booking_id]
+//     );
+
+//     if (!booking.rows.length) {
+//       return res.status(404).json({ message: "Booking not found" });
+//     }
+
+//     const amount = booking.rows[0].amount;
+
+//     const options = {
+//       amount: amount * 100, // paise
+//       currency: "INR",
+//       receipt: `receipt_${booking_id}`,
+//     };
+
+//     const order = await razorpay.orders.create(options);
+
+//     // save order_id in payments table
+//     await client.query(
+//       `UPDATE payments
+//        SET gateway_order_id = $1
+//        WHERE booking_id = $2`,
+//       [order.id, booking_id]
+//     );
+
+//     res.json({
+//       message: "Order created",
+//       order
+//     });
+
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+
+// const verifyPayment = async (req, res) => {
+//   try {
+//     const {
+//       razorpay_order_id,
+//       razorpay_payment_id,
+//       razorpay_signature,
+//       booking_id
+//     } = req.body;
+
+//     // 🔐 Verify signature
+//     const body = razorpay_order_id + "|" + razorpay_payment_id;
+
+//     const expected = crypto
+//       .createHmac("sha256", process.env.RAZORPAY_SECRET)
+//       .update(body)
+//       .digest("hex");
+
+//     if (expected !== razorpay_signature) {
+//       // ❌ mark payment failed
+//       await client.query(
+//         `UPDATE payments SET status = 'failed' WHERE booking_id = $1`,
+//         [booking_id]
+//       );
+
+//       return res.status(400).json({ message: "Invalid payment" });
+//     }
+
+//     // ✅ update payment
+//     await client.query(
+//       `UPDATE payments
+//        SET status = 'success',
+//            gateway_payment_id = $1,
+//            gateway_signature = $2,
+//            updated_at = CURRENT_TIMESTAMP
+//        WHERE booking_id = $3`,
+//       [razorpay_payment_id, razorpay_signature, booking_id]
+//     );
+
+//     // ✅ confirm booking
+//     await client.query(
+//       `UPDATE service_bookings
+//        SET status = 'confirmed'
+//        WHERE id = $1`,
+//       [booking_id]
+//     );
+
+//     res.json({ message: "Payment verified & booking confirmed" });
+
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
 const getResidentBookings = async (req, res) => {
     try {
       const  user_id  = req.params.id;
@@ -164,7 +257,7 @@ const fetchAllBookings = async (req, res) => {
 };
 
 module.exports = {
-  bookVendorService,
+  // bookVendorService,
   fetchAllBookings,
   getVendorBookings,
   getResidentBookings
