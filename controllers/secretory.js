@@ -40,7 +40,7 @@ const secretaryProfileUpload = multer({
 });
 
 const ADMIN_PUBLIC_FIELDS =
-  "id, name, email, phone, role, society_id, profile_image, is_active, created_at, updated_at, created_by";
+  "id, name, email, phone, role, society_id, profile_image,is_verified, is_active, created_at, updated_at, created_by";
 
 const signup = async (req, res) => {
   try {
@@ -258,13 +258,12 @@ const updateSecretary = async (req, res) => {
 const updateStatusSecretary = async (req, res) => {
   try {
     const { id } = req.params;
-    const { is_active } = req.body;
 
-    const values = [is_active, id];
+    const values = [true, id];
 
     const result = await client.query(
       `UPDATE admins
-       SET is_active = $1,
+       SET is_verified = $1,
            updated_at = CURRENT_TIMESTAMP
        WHERE id = $2
        RETURNING ${ADMIN_PUBLIC_FIELDS}`,

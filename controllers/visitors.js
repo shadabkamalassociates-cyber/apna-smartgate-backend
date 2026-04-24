@@ -121,12 +121,12 @@ const fetchVisitorsBySociety = async (req, res) => {
    v.name,
    v.phone,
    v.vehicleinfo
-FROM visitor_attendance va 
-JOIN flats f
+    FROM visitor_attendance va 
+    JOIN flats f
    ON va.flat_id = f.id 
-  JOIN visitors v
-   ON va.visitor_id = v.id
-WHERE va.society_id = $1;`,
+    JOIN visitors v
+    ON va.visitor_id = v.id
+    WHERE va.society_id = $1;`,
       [societyId],
     );
 
@@ -217,8 +217,8 @@ const createVisitor = async (req, res) => {
 };
 const reEnteryVisitor = async (req, res) => {
   try {
-    const { visitor_id, flat_id,societyId } = req.body;
-    if(!societyId){
+    const { visitor_id, flat_id, societyId } = req.body;
+    if (!societyId) {
       return res.status(400).json({
         success: false,
         message: "Society ID is required visitor_id, flat_id and societyId are required",
@@ -325,12 +325,12 @@ const getVisitorsByResident = async (req, res) => {
         status: record.status,
         visitor: visitor
           ? {
-              id: visitor.id,
-              name: visitor.name,
-              phone: visitor.phone,
-              vehicleinfo: visitor.vehicleinfo,
-              flat_id: visitor.flat_id,
-            }
+            id: visitor.id,
+            name: visitor.name,
+            phone: visitor.phone,
+            vehicleinfo: visitor.vehicleinfo,
+            flat_id: visitor.flat_id,
+          }
           : null,
       });
     }
@@ -339,7 +339,7 @@ const getVisitorsByResident = async (req, res) => {
       success: true,
       message: "Visitors fetched successfully",
       data: visitorsData,
-    });               
+    });
   } catch (err) {
     console.error("Get Visitors Error:", err);
     return res.status(500).json({

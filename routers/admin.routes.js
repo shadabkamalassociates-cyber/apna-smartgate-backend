@@ -26,7 +26,7 @@ adminRouter.put(
   // secretaryProfileUpload.single("profile_image"),
   updateSecretary,
 );
-adminRouter.put("/update-status/:id", authMiddleware, updateStatusSecretary);
+adminRouter.put("/update-status/:id", updateStatusSecretary);
 adminRouter.delete("/delete/:id", authMiddleware, deleteSecretary);
 adminRouter.get("/fetch-all", authMiddleware, getAllSecretaries);
 // adminRouter.put("/update-secretory", profileImageUpload.single("profile_image"), updateAdmin);
