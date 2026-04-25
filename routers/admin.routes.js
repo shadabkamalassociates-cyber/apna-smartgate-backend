@@ -3,6 +3,7 @@ const { signin } = require("../controllers/common/Authentication");
 const { authMiddleware } = require("../middlewares/protect");
 const { updateSecretary, deleteSecretary, getAllSecretaries, getSecretariesBySociety, signup, updateStatusSecretary, secretaryProfileUpload } = require("../controllers/secretory");
 const { upload } = require("../controllers/common/multer");
+const { generateUniqueId } = require("../controllers/unique.controller");
 const adminRouter = express.Router();
 
 adminRouter.post("/sign-in",signin)
@@ -31,5 +32,5 @@ adminRouter.delete("/delete/:id", authMiddleware, deleteSecretary);
 adminRouter.get("/fetch-all", authMiddleware, getAllSecretaries);
 // adminRouter.put("/update-secretory", profileImageUpload.single("profile_image"), updateAdmin);
 adminRouter.get("/get-secretory-by-society/:societyId",getSecretariesBySociety)
-
+adminRouter.put("/generate-unique-id", generateUniqueId);
 module.exports = adminRouter;
