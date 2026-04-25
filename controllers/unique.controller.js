@@ -1,3 +1,4 @@
+const { client } = require("../config/client");
 const { generateSmartGateId } = require("./common/uniqueId");
 
 const generateUniqueId = async (req,res) => {
@@ -16,17 +17,18 @@ const generateUniqueId = async (req,res) => {
             });
         }
         const id = generateSmartGateId(role);
-
-        const query = `UPDATE admins SET unique_id = $1 WHERE id = $2`;
+    
+        const query = `UPDATE admins SET mygate_id = $1 WHERE id = $2`;
         const result = await client.query(query, [id,Id]);
       
         res.status(200).json({
             success: true,
             message: "Unique ID generated successfully",
-            data:result.rows[0].unique_id
+            data:result.rows[0]
         });
-
+        console.log(result,"++++++++++++++++++++++++")
     } catch (error) {
+      
         res.status(500).json({
             success: false,
             message: "Failed to generate unique ID",
