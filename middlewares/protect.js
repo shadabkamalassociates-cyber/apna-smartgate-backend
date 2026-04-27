@@ -58,7 +58,7 @@ const authMiddleware = (req, res, next) => {
   //   : null;
   // const token = cookieToken || headerToken;
   // console.log(token,"|||||||||||||||||||||||||||||||")
-  const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjhlMmNkYjU2LTY4Y2EtNDc3Ny04M2FiLWRlNzJhNmMxOTMwMyIsInJvbGUiOiJtYXN0ZXJfYWRtaW4iLCJpYXQiOjE3NzY0MjI4NDIsImV4cCI6MTc3NzAyNzY0Mn0.dQ-O9DaV-qlBsZEEcp0euMKYqJcPThyssSrQ430DwyQ";
+  const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjhlMmNkYjU2LTY4Y2EtNDc3Ny04M2FiLWRlNzJhNmMxOTMwMyIsInJvbGUiOiJtYXN0ZXJfYWRtaW4iLCJpYXQiOjE3NzcyNjgzMDksImV4cCI6MTc3Nzg3MzEwOX0.PeeTi7XugJogw8B3dcYK3C6gNvywvfVrnqUMF4GPRsk";
   
   if (!token) {
     return res.status(401).json({ message: "Unauthorized" });
