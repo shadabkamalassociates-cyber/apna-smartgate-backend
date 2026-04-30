@@ -33,25 +33,51 @@ const sendResidenceAlert = async (req, res) => {
       return res.status(404).json({ message: "Visitor not found" });
     }
 
-    console.log("++++++++++++++++++++++++++++++++",tokens)
+    // console.log("++++++++++++++++++++++++++++++++",tokens)
     const messaging = admin.messaging();
 
+    // await messaging.sendEachForMulticast({
+    //   tokens: tokens,
+    //   notification: {
+    //     title: "Visitor Entry Request",
+    //     body: `${visitor.name} is waiting at the gate`,
+    //   },
+    //   data: {
+    //     visitorId: String(visitor.id),
+    //     actionType: "VISITOR_ENTRY",
+    //     flatId: String(id),
+    //   },
+    //   android: {
+    //     priority: "high",
+    //   },
+    // });
+
     await messaging.sendEachForMulticast({
-      tokens: tokens,
+      tokens: uniqueTokens,
       notification: {
         title: "Visitor Entry Request",
-        body: `${visitor.name} is waiting at the gate`,
+        body: `${visitor.rows[0].name} is waiting at the gate`,
       },
       data: {
-        visitorId: String(visitor.id),
+        visitorId: String(visitorId),
         actionType: "VISITOR_ENTRY",
         flatId: String(id),
       },
       android: {
         priority: "high",
       },
+      apns: {
+        headers: {
+          "apns-priority": "10",
+        },
+        payload: {
+          aps: {
+            sound: "default",
+            badge: 1,
+          },
+        },
+      },
     });
-
     res.json({
       success: true,
       message: "Notification sent successfully",

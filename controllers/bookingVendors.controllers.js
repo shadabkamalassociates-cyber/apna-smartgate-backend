@@ -278,7 +278,6 @@ module.exports = {
   bookVendorService,
   fetchAllBookings,
   createPaymentOrder,
-
   getVendorBookings,
   getResidentBookings
 };

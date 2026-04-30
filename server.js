@@ -102,7 +102,7 @@ app.use("/api/flats", flatRouter);
 app.use("/api/notice", noticeRouter);
 app.use("/api/booking-vendors", bookingVendorsRouter);
 app.use("/api/events", eventsRouter);
-
+// app.use("/api/amenities", amenitiesRouter);
 
 app.get("/",(req,res)=>{
     res.send("Smart Society me apka swagat hai....❌")
