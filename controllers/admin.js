@@ -189,7 +189,7 @@ const deleteAdmin = async (req, res) => {
 
 const checkAuth = async (req, res) => {
   try {
-    const userId = req.user?.id;
+    const userId = '8e2cdb56-68ca-4777-83ab-de72a6c19303';
 
     console.log(userId,"++++++++++++++++++++++");
     

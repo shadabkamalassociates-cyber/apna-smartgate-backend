@@ -3,7 +3,6 @@ const { createEvent, getEvents, updateEvent, deleteEvent, getEventsBySociety } =
 const eventRouter = express.Router();        
 
 
-
 eventRouter.post("/create", createEvent);
 eventRouter.get("/get", getEvents);
 eventRouter.put("/update", updateEvent);

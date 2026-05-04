@@ -231,13 +231,45 @@ const updateMaidStatus = async (req, res) => {
         message: "Internal server error"
       });
     }
-  };
+};
   
+const fetchMaidBySociety = async (req,res)=>{
+  try {
+    const { society_id } = req.params;
+    const maids = await client.query(
+      `SELECT m.*,
+      s.name AS society_name
+      FROM maids m
+      JOIN societies s ON m.society_id = s.id
+      WHERE m.society_id = $1
+      ORDER BY m.created_at DESC`, [society_id]);
+
+    if(maids.rows.length === 0){
+      return res.status(404).json({
+        success: false,
+        message: "No maids found"
+      })
+    }
+    return res.status(200).json({
+      success: true,
+      data: maids.rows
+    });
+  } catch (error) {
+    console.error("Fetch Maid By Society Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+}
+
 
 module.exports = {
     registerMaid,
     fetchAllMaids,
     updateMaid,
     deleteMaid,
-    updateMaidStatus
+    updateMaidStatus,
+    fetchMaidBySociety
 };
+

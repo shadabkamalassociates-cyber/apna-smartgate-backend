@@ -60,15 +60,18 @@ const signin = async (req, res) => {
       [email],
     );
 
-    if(!userResult.rows[0].is_verified){
-      return res.status(400).json({ message: "Your account is not verified, please check your email for verification!" });
-    }
-
     if (userResult.rows.length === 0) {
       return res.status(400).json({ message: "Invalid credentials!" });
     }
 
     const result = userResult.rows[0];
+
+    if (result.is_verified === false) {
+      return res.status(400).json({
+        message:
+          "Your account is not verified, please check your email for verification!",
+      });
+    }
     
     console.log(result);
     const isMatch = await bcrypt.compare(password, result.password);
@@ -90,15 +93,26 @@ const signin = async (req, res) => {
   //   maxAge: 30 * 24 * 60 * 60 * 1000, // 1 month
   // });
 
-  const isProduction = process.env.NODE_ENV === "production";
+  // Cookies are unreliable for cross-site browser requests (e.g. Vite on :5173 calling API on :5001).
+  // Prefer `Authorization: Bearer <token>` from the client for those cases.
+  // If you truly need cross-site cookies, set COOKIE_SAMESITE=none and serve HTTPS (secure cookies).
+  const sameSite = process.env.COOKIE_SAMESITE || "lax";
+  const isProd = process.env.NODE_ENV === "production";
+  // For local http dev, `Secure` cookies won't be sent to `http://localhost:PORT`.
+  // In production behind HTTPS, default `secure: true`.
+  // Note: `SameSite=None` requires `Secure=true` in modern browsers — use HTTPS locally if you need that.
+  const secureEnv = String(process.env.COOKIE_SECURE || "").toLowerCase();
+  const secure =
+    secureEnv === "true" ? true : secureEnv === "false" ? false : isProd;
 
   res.cookie("token", token, {
     httpOnly: true,
-    secure: true,                 // 🔥 must be true (HTTPS)
-    sameSite: "none",             // 🔥 required for cross-origin
-    domain: ".kamalhousing.com",  // 🔥 best choice
+    secure,
+    sameSite,
     maxAge: 30 * 24 * 60 * 60 * 1000,
   });
+
+
     res.status(200).json({
       message: "Login successful",
       token,
