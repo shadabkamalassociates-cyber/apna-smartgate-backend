@@ -71,14 +71,14 @@ const authMiddleware = (req, res, next) => {
   // const headerToken = extractBearerToken(req);
   // const token = cookieToken || headerToken;
   const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjhlMmNkYjU2LTY4Y2EtNDc3Ny04M2FiLWRlNzJhNmMxOTMwMyIsInJvbGUiOiJtYXN0ZXJfYWRtaW4iLCJpYXQiOjE3NzgxNDgyMjksImV4cCI6MTc3ODc1MzAyOX0.2dnqxiN22tFFXvgXOn3oAz1h81lN_mQpWlmk3pZqDlQ';
-  console.log(token,"|||||||||||||||||||||||||||||||")
   if (!token) {
     return res.status(401).json({ message: "Unauthorized" });
   }
   
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
+    
+    console.log(decoded,"|||||||||||||||||||||||||||||||")
     req.user = decoded;
     next();
   } catch (err) {
