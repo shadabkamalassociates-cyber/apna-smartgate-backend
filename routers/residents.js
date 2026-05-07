@@ -10,6 +10,7 @@ const {
   updateresident,
   fetchByFlatId,
   residentProfileUpload,
+  approval,
 } = require("../controllers/residents");
 
 const { checkAuthentication } = require('../controllers/guards');
@@ -34,6 +35,8 @@ residentsRouter.get("/fetch",  getAllusers);
 residentsRouter.get("/checkAuth",checkAuthentication)
 
 residentsRouter.delete("/delete/:id",  deleteResidentById);
+
+residentsRouter.put("/approval/:id", approval)
 
 residentsRouter.put(
   "/update/:id",

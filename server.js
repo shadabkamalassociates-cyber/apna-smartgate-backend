@@ -29,13 +29,40 @@ const vendorsServicesRouter = require('./routers/vendors_services.routers')
 const bookingVendorsRouter = require('./routers/bookingVendors.routers')
 const ticketRouter = require('./routers/ticket.router')
 const eventsRouter = require("./routers/events.routes");
-
+const http = require("http");
+const { Server } = require("socket.io");
 const app = express()
+
+const server = http.createServer(app);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 dotenv.config()
 app.use(morgan("combined"))
 app.use(cookiesParser())
+
+
+
+// ✅ then attach socket.io
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+  },
+});
+
+// Socket connection
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
+
+  socket.on("join_notice", (noticeId) => {
+    socket.join(`notice_${noticeId}`);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected");
+  });
+});
+
+
 
 // Serve uploaded files (stored on disk under ./uploads)
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -111,3 +138,4 @@ app.get("/",(req,res)=>{
 const PORT = process.env.PORT || 5001
 
 app.listen(PORT, ()=>{console.log(`Server ${PORT} pe upyog mein hai...`)})
+module.exports = { io };

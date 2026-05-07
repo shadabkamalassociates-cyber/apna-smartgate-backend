@@ -461,9 +461,29 @@ const fetchBySociety = async (req, res) => {
   }
 };
 
-
+const approval = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await client.query("UPDATE users SET is_approved = true WHERE id = $1", [id]);
+    // const { approval_status } = req.body;
+    if (result.rowCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Resident not found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Resident approved successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
 module.exports = {
   validation,
+  approval,
   residentLogin,
   usersOnboard,
   fetchByFlatId,

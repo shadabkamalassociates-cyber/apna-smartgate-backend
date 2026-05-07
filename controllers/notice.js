@@ -1,4 +1,6 @@
+
 const { client } = require("../config/client");
+const { io } = require("../server");
 
 
 const createNotice = async (req, res) => {
@@ -85,10 +87,45 @@ const fetchByCreatedBy = async (req, res) => {
   }
 };
 
+const markNoticeViewed = async (req, res) => {
+  const { noticeId, userId, societyId } = req.body;
+
+  // Insert view (avoid duplicate)
+  await client.query(
+    `INSERT INTO notice_views (notice_id, user_id)
+     VALUES ($1, $2)
+     ON CONFLICT (notice_id, user_id) DO NOTHING`,
+    [noticeId, userId]
+  );
+
+  // Get updated seen/unseen
+  const result = await client.query(
+    `SELECT 
+        COUNT(DISTINCT u.id) FILTER (WHERE nv.user_id IS NOT NULL) AS seen,
+        COUNT(DISTINCT u.id) FILTER (WHERE nv.user_id IS NULL) AS unseen
+     FROM users u
+     LEFT JOIN notice_views nv 
+        ON u.id = nv.user_id AND nv.notice_id = $1
+     WHERE u.society_id = $2`,
+    [noticeId, societyId]
+  );
+
+  const data = result.rows[0];
+
+  io.to(`notice_${noticeId}`).emit("notice_view_update", {
+    noticeId,
+    seen: data.seen,
+    unseen: data.unseen
+  });
+
+  res.json({ success: true });
+};
+
 module.exports = {
   createNotice,
   updateNotice,
   deleteNotice,
+  markNoticeViewed,
   fetchBySociety,
   fetchByCreatedBy
 };
