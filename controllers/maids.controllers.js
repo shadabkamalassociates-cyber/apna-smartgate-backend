@@ -196,7 +196,7 @@ const updateMaidStatus = async (req, res) => {
       }
   
       // 🔴 Check maid exists
-      const maidCheck = await pool.query(
+      const maidCheck = await client.query(
         `SELECT id FROM maids WHERE id = $1`,
         [id]
       );
@@ -209,7 +209,7 @@ const updateMaidStatus = async (req, res) => {
       }
   
       // ✅ Update status
-      const updated = await pool.query(
+      const updated = await client.query(
         `UPDATE maids
          SET status = $1, updated_at = NOW()
          WHERE id = $2
