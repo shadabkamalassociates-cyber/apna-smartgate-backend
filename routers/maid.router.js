@@ -1,5 +1,5 @@
 const express = require('express');
-const { registerMaid, fetchAllMaids, updateMaid, updateMaidStatus, fetchMaidBySociety } = require('../controllers/maids.controllers');
+const { registerMaid, fetchAllMaids, updateMaid, updateMaidStatus, fetchMaidBySociety, deleteMaid } = require('../controllers/maids.controllers');
 const maidRouter = express.Router();
 
 maidRouter.post('/register', registerMaid);

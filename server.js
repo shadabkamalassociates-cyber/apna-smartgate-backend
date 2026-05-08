@@ -31,6 +31,8 @@ const ticketRouter = require('./routers/ticket.router')
 const eventsRouter = require("./routers/events.routes");
 const http = require("http");
 const { Server } = require("socket.io");
+const chatRoutes = require('./routers/chatRoutes')
+const maidRouter = require('./routers/maid.router')
 const app = express()
 
 const server = http.createServer(app);
@@ -123,13 +125,15 @@ app.use("/api/tickets", ticketRouter);
 app.use("/api/owner", societiesOwnerRouters);
 app.use("/api/society", societiesRouter);
 app.use("/api/blocks", blockRouter);
+app.use("/api/chat", chatRoutes);
 app.use("/api/vendors", vendorsRouter);
 app.use("/api/vendors-services", vendorsServicesRouter);
+app.use("/api/maid", maidRouter);
 app.use("/api/flats", flatRouter);
 app.use("/api/notice", noticeRouter);
 app.use("/api/booking-vendors", bookingVendorsRouter);
 app.use("/api/events", eventsRouter);
-// app.use("/api/amenities", amenitiesRouter);
+// app.use("/api/amenities", amenitiesRouter);  
 
 app.get("/",(req,res)=>{
     res.send("Smart Society me apka swagat hai....❌")

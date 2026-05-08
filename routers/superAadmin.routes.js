@@ -18,7 +18,6 @@ superAdminRouter.post(
   ]),
   signup,
 );
-superAdminRouter.get("/s",authMiddleware)
 // superAdminRouter.put("/update",  profileImageUpload.single("profile_image"), updateAdmin);
 
 module.exports = superAdminRouter;
