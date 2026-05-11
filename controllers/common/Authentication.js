@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { generateToken } = require("./generateToken");
 const { client } = require("../../config/client");
+const axios = require("axios");
 const path = require("path");
 const signup = async (req, res) => {
   try {
@@ -13,7 +14,7 @@ const signup = async (req, res) => {
       role,
       address_line1,
       address_line2,
-      gender
+      gender 
     } = req.body;
     console.log(req.body)
     if (!name || !email || !password) {
@@ -127,5 +128,40 @@ const signin = async (req, res) => {
 };
 
 
+const otpSender = async (req, res)=>{
+    try {
+        const { mobileNumber } = req.body;
+        const otp = Math.floor(100000 + Math.random() * 900000);
+        const whatsappUrl = `https://webhooks.wappblaster.com/webhook/67722d68ea04d946eaf743ac?number=91${mobileNumber}&otp=${otp}`;
+        await axios.post(whatsappUrl);
 
-module.exports = { signin, signup };
+        res.status(200).json({ message: "OTP sent successfully", otp });
+
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
+
+const passwordReset = async (req, res) => {
+  try {
+    const { email} = req.body;
+    const user = await client.query(
+      "SELECT * FROM admins WHERE email = $1",
+      [email],
+    );
+    if (user.rows.length === 0) {
+      return res.status(400).json({ message: "User not found" });
+    }
+    const token = generateToken({
+      id: user.rows[0].id,
+      role: user.rows[0].role,
+      email: user.rows[0].email,
+    });
+    res.status(200).json({ message: "Password reset successful", token, user: user.rows[0] });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
+module.exports = { signin, signup, otpSender, passwordReset };

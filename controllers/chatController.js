@@ -1,4 +1,5 @@
 const { client } = require("../config/client");
+const { getIO } = require("./common/socket");
 
 const createOrGetChat = async (req, res) => {
 
@@ -51,7 +52,6 @@ const createOrGetChat = async (req, res) => {
 
 };
 
-
 const sendMessage = async (req, res) => {
 
     try {
@@ -88,11 +88,9 @@ const sendMessage = async (req, res) => {
   
     }
   
-  };
+};
 
-
-
-  const getMessages = async (req, res) => {
+const getMessages = async (req, res) => {
 
     try {
   
@@ -124,10 +122,92 @@ const sendMessage = async (req, res) => {
   
     }
   
-  };
+};
 
+const getInboxMessages = async (req, res) => {
+  try {
 
-  const seenMessages = async (req, res) => {
+    const { resident_id, vendor_id } = req.body;
+
+    console.log(resident_id, vendor_id);
+
+    // RESIDENT CHAT
+    if (resident_id && !vendor_id) {
+
+      const messages = await client.query(
+        `
+        SELECT 
+          chats.*,
+          users.name as resident_name,
+          users.profile_image as resident_profile_image
+      
+        FROM chats
+      
+        JOIN users 
+          ON chats.resident_id = users.id
+      
+        WHERE chats.resident_id = $1
+      
+        ORDER BY chats.created_at ASC
+        `,
+        [resident_id]
+      );
+      return res.status(200).json({
+        success: true,
+        count: messages.rows.length,
+        data: messages.rows
+      });
+
+    }
+
+    // VENDOR CHAT
+    if (vendor_id && !resident_id) {
+
+      const messages = await client.query(
+        `
+        SELECT 
+          chats.*,
+          vendors.name as vendor_name,
+          vendors.profile_image as vendor_profile_image
+        FROM chats
+
+        JOIN vendors 
+          ON chats.vendor_id = vendors.id
+
+        WHERE chats.vendor_id = $1
+
+        ORDER BY chats.created_at ASC
+        `,
+        [vendor_id]
+      );
+
+      return res.status(200).json({
+        success: true,
+        count: messages.rows.length,
+        data: messages.rows
+      });
+
+    }
+
+    // INVALID REQUEST
+    return res.status(400).json({
+      success: false,
+      message: "Provide either resident_id or vendor_id"
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+
+  }
+};
+
+const seenMessages = async (req, res) => {
 
     try {
   
@@ -141,7 +221,15 @@ const sendMessage = async (req, res) => {
         `,
         [chatId]
       );
-  
+
+      const io = getIO();
+      // emit realtime event
+      io.to(chatId).emit("messagesSeen", {
+        chatId,
+      });
+
+
+
       return res.status(200).json({
         success: true,
         message: "Messages seen"
@@ -158,12 +246,13 @@ const sendMessage = async (req, res) => {
   
     }
   
-  };
+};
 
 
   module.exports = {
     createOrGetChat,
     sendMessage,
+getInboxMessages,
     getMessages,
     seenMessages
   };

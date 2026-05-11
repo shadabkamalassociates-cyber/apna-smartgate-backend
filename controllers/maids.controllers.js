@@ -183,17 +183,17 @@ const updateMaid = async (req, res) => {
 const updateMaidStatus = async (req, res) => {
     try {
       const { id } = req.params;
-      const { status } = req.body;
+      // const { status } = req.body;
   
-      const allowedStatus = ['pending', 'verified', 'blocked'];
+      // const allowedStatus = ['pending', 'verified', 'blocked'];
   
-      // 🔴 Validate status
-      if (!status || !allowedStatus.includes(status)) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid status value"
-        });
-      }
+      // // 🔴 Validate status
+      // if (!status || !allowedStatus.includes(status)) {
+      //   return res.status(400).json({
+      //     success: false,
+      //     message: "Invalid status value"
+      //   });
+      // }
   
       // 🔴 Check maid exists
       const maidCheck = await client.query(
@@ -211,11 +211,11 @@ const updateMaidStatus = async (req, res) => {
       // ✅ Update status
       const updated = await client.query(
         `UPDATE maids
-         SET status = $1, updated_at = NOW()
-         WHERE id = $2
-         RETURNING id, name, phone, status`,
-        [status, id]
-      );
+         SET is_verified = true, updated_at = NOW()
+         WHERE id = $1
+         RETURNING id, name, phone, is_verified`,
+      [id]
+    );
   
       return res.status(200).json({
         success: true,
@@ -232,7 +232,7 @@ const updateMaidStatus = async (req, res) => {
       });
     }
 };
-  
+
 const fetchMaidBySociety = async (req,res)=>{
   try {
     const { society_id } = req.params;

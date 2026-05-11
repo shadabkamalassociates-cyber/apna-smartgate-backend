@@ -1,6 +1,7 @@
 
 const { client } = require("../config/client");
-const { io } = require("../server");
+const { getIO } = require("./common/socket");
+
 
 
 const createNotice = async (req, res) => {
@@ -87,44 +88,150 @@ const fetchByCreatedBy = async (req, res) => {
   }
 };
 
+// const markNoticeViewed = async (req, res) => {
+//   const { noticeId, userId, societyId } = req.body;
+
+//   // Insert view (avoid duplicate)
+//   await client.query(
+//     `INSERT INTO notice_views (notice_id, user_id)
+//      VALUES ($1, $2)
+//      ON CONFLICT (notice_id, user_id) DO NOTHING`,
+//     [noticeId, userId]
+//   );
+
+//   // Get updated seen/unseen
+//   const result = await client.query(
+//     `SELECT 
+//         COUNT(DISTINCT u.id) FILTER (WHERE nv.user_id IS NOT NULL) AS seen,
+//         COUNT(DISTINCT u.id) FILTER (WHERE nv.user_id IS NULL) AS unseen
+//      FROM users u
+//      LEFT JOIN notice_views nv 
+//         ON u.id = nv.user_id AND nv.notice_id = $1
+//      WHERE u.society_id = $2`,
+//     [noticeId, societyId]
+//   );
+
+//   const data = result.rows[0];
+
+//   io.to(`notice_${noticeId}`).emit("notice_view_update", {
+//     noticeId,
+//     seen: data.seen,
+//     unseen: data.unseen
+//   });
+
+//   res.json({ success: true });
+// };
+
+
 const markNoticeViewed = async (req, res) => {
-  const { noticeId, userId, societyId } = req.body;
+  try {
+    const { noticeId, userId } = req.body;
 
-  // Insert view (avoid duplicate)
-  await client.query(
-    `INSERT INTO notice_views (notice_id, user_id)
-     VALUES ($1, $2)
-     ON CONFLICT (notice_id, user_id) DO NOTHING`,
-    [noticeId, userId]
-  );
+    // Check notice exists
+    const noticeExists = await client.query(
+      `SELECT id FROM notice WHERE id = $1`,
+      [noticeId]
+    );
 
-  // Get updated seen/unseen
-  const result = await client.query(
-    `SELECT 
-        COUNT(DISTINCT u.id) FILTER (WHERE nv.user_id IS NOT NULL) AS seen,
-        COUNT(DISTINCT u.id) FILTER (WHERE nv.user_id IS NULL) AS unseen
-     FROM users u
-     LEFT JOIN notice_views nv 
-        ON u.id = nv.user_id AND nv.notice_id = $1
-     WHERE u.society_id = $2`,
-    [noticeId, societyId]
-  );
+    if (noticeExists.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Notice not found",
+      });
+    }
 
-  const data = result.rows[0];
+    // Insert view only once
+    await client.query(
+      `INSERT INTO notice_views (notice_id, user_id)
+       VALUES ($1, $2)
+       ON CONFLICT (notice_id, user_id)
+       DO NOTHING`,
+      [noticeId, userId]
+    );
 
-  io.to(`notice_${noticeId}`).emit("notice_view_update", {
-    noticeId,
-    seen: data.seen,
-    unseen: data.unseen
-  });
+    // Get viewed users
+    const viewedUsers = await client.query(
+      `
+      SELECT 
+        u.id,
+        u.name,
+        u.profile_image,
+        nv.viewed_at
+      FROM notice_views nv
+      JOIN users u ON u.id = nv.user_id
+      WHERE nv.notice_id = $1
+      ORDER BY nv.viewed_at DESC
+      `,
+      [noticeId]
+    );
+    const io = getIO();
+    // Emit realtime update
+    io.to(`notice_${noticeId}`).emit(
+      "notice_view_update",
+      {
+        noticeId,
+        viewers: viewedUsers.rows,
+        totalViewed: viewedUsers.rows.length,
+      }
+    );
 
-  res.json({ success: true });
+    return res.json({
+      success: true,
+      viewers: viewedUsers.rows,
+    });
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
 };
+const getNoticeViews = async (req, res) => {
+  try {
+    const { noticeId } = req.params;
+    
+    // const viewedUsers = await client.query(
+    //   `
+    //   SELECT 
+    //     u.id,
+    //     u.name,
+    //     u.profile_image,
+    //     nv.viewed_at
+    //   FROM notice_views nv
+    //   JOIN users u ON u.id = nv.user_id
+    //   WHERE nv.notice_id = $1
+    //   ORDER BY nv.viewed_at DESC
+    //   `,
+    //   [noticeId]
+    // );
+    const viewedUsers = await client.query(
+        `
+        SELECT * FROM notice_views WHERE notice_id = $1
+        `,
+        [noticeId]
+      );
+    return res.json({
+      success: true,
+      totalViewed: viewedUsers.rows.length,
+      viewers: viewedUsers.rows,
+    });
 
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
 module.exports = {
   createNotice,
   updateNotice,
   deleteNotice,
+  getNoticeViews,
   markNoticeViewed,
   fetchBySociety,
   fetchByCreatedBy

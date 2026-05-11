@@ -1,5 +1,5 @@
 const express = require('express');
-const { createNotice, updateNotice, deleteNotice, fetchBySociety, fetchByCreatedBy, markNoticeViewed } = require('../controllers/notice');
+const { createNotice, updateNotice, deleteNotice, fetchBySociety, fetchByCreatedBy, markNoticeViewed, getNoticeViews } = require('../controllers/notice');
 const noticeRouter = express.Router();
 
 
@@ -9,5 +9,5 @@ noticeRouter.delete('/delete/:id', deleteNotice);
 noticeRouter.get('/fetch-by-society/:society_id', fetchBySociety);
 noticeRouter.get('/fetch-by-created-by/:created_by', fetchByCreatedBy);
 noticeRouter.get('/mark-notice-view', markNoticeViewed);
-
+noticeRouter.get('/get-notice-views/:noticeId', getNoticeViews);
 module.exports = noticeRouter;

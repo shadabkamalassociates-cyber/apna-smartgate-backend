@@ -29,13 +29,15 @@ const vendorsServicesRouter = require('./routers/vendors_services.routers')
 const bookingVendorsRouter = require('./routers/bookingVendors.routers')
 const ticketRouter = require('./routers/ticket.router')
 const eventsRouter = require("./routers/events.routes");
+const app = express()
 const http = require("http");
-const { Server } = require("socket.io");
+const server = http.createServer(app);
+
 const chatRoutes = require('./routers/chatRoutes')
 const maidRouter = require('./routers/maid.router')
-const app = express()
+const { initSocket } = require('./controllers/common/socket')
+const authRouter = require('./routers/auth.routers')
 
-const server = http.createServer(app);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 dotenv.config()
@@ -43,27 +45,8 @@ app.use(morgan("combined"))
 app.use(cookiesParser())
 
 
-
-// ✅ then attach socket.io
-const io = new Server(server, {
-  cors: {
-    origin: "*",
-  },
-});
-
-// Socket connection
-io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
-
-  socket.on("join_notice", (noticeId) => {
-    socket.join(`notice_${noticeId}`);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("User disconnected");
-  });
-});
-
+// initialize socket
+initSocket(server);
 
 
 // Serve uploaded files (stored on disk under ./uploads)
@@ -130,9 +113,11 @@ app.use("/api/vendors", vendorsRouter);
 app.use("/api/vendors-services", vendorsServicesRouter);
 app.use("/api/maid", maidRouter);
 app.use("/api/flats", flatRouter);
+app.use("/api/auth", authRouter);
 app.use("/api/notice", noticeRouter);
 app.use("/api/booking-vendors", bookingVendorsRouter);
 app.use("/api/events", eventsRouter);
+app.use("/api/chats", chatRoutes);
 // app.use("/api/amenities", amenitiesRouter);  
 
 app.get("/",(req,res)=>{
@@ -142,4 +127,3 @@ app.get("/",(req,res)=>{
 const PORT = process.env.PORT || 5001
 
 app.listen(PORT, ()=>{console.log(`Server ${PORT} pe upyog mein hai...`)})
-module.exports = { io };
