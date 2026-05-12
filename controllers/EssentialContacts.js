@@ -9,18 +9,7 @@ const fs = require("fs");
 //   "uploads",
 //   "essential-contact-images",
 // );
-
-// Multipart field name: `profile_image` (single image file).
-// const profileImageUpload = multer({
-//   storage: multer.diskStorage({
-//     destination: (req, file, cb) => {
-//       try {
-//         fs.mkdirSync(ESSENTIAL_CONTACT_IMAGES_DIR, { recursive: true });
-//         cb(null, ESSENTIAL_CONTACT_IMAGES_DIR);
-//       } catch (e) {
-//         cb(e);
-//       }
-//     },
+ 
 //     filename: (req, file, cb) => {
 //       const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
 //       const ext = path.extname(file?.originalname || "").toLowerCase();
@@ -37,6 +26,7 @@ const fs = require("fs");
 //     cb(null, true);
 //   },
 // });
+
 
 const createBySociety = async (req, res) => {
   try {
@@ -109,6 +99,9 @@ const createBySociety = async (req, res) => {
     });
   }
 };
+
+
+
 const fetchAllEssentialContacts = async (req, res) => {
   try {
     const result = await client.query(
@@ -163,6 +156,8 @@ const fetchEssentialContactsBySociety = async (req, res) => {
     });
   }
 };
+
+
 const deleteEssentialContactById = async (req, res) => {
   try {
     const { id } = req.params;

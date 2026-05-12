@@ -146,19 +146,25 @@ const otpSender = async (req, res)=>{
 const passwordReset = async (req, res) => {
   try {
     const { email} = req.body;
+
     const user = await client.query(
       "SELECT * FROM admins WHERE email = $1",
       [email],
     );
+
     if (user.rows.length === 0) {
       return res.status(400).json({ message: "User not found" });
     }
+
     const token = generateToken({
       id: user.rows[0].id,
       role: user.rows[0].role,
-      email: user.rows[0].email,
     });
+
+    const link = `${process.env.FRONTEND_URL}/reset-password/token=${token}`;
+
     res.status(200).json({ message: "Password reset successful", token, user: user.rows[0] });
+    
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Internal server error" });
