@@ -19,6 +19,6 @@ chatRoutes.get("/messages/:chatId", getMessages);
 
 chatRoutes.put("/seen/:chatId", seenMessages);
 
-chatRoutes.get("/inbox", getInboxMessages);
+chatRoutes.post("/inbox", getInboxMessages);
 
-module.exports = chatRoutes;
+module.exports = chatRoutes; 

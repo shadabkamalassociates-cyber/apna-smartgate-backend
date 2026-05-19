@@ -1,3 +1,7 @@
+const nodemailer = require("nodemailer");
+const dotenv = require('dotenv');
+
+dotenv.config({ path: './.env' });
 const generateSmartGateId = (role) => {
     const rolePrefix = {
       secretary: "SEC",
@@ -17,4 +21,17 @@ const generateSmartGateId = (role) => {
     return `${rolePrefix[role] || "USR"}-${randomPart}`;
   };
 
-  module.exports = { generateSmartGateId };
+  /** Returns a Gmail transporter, or null if EMAIL / EMAIL_PASSWORD are not set. */
+  const getMailTransporter = () => {
+    const user = process.env.EMAIL;
+    const pass = process.env.EMAIL_PASSWORD;
+    if (!user || !pass) {
+      return null;
+    }
+    return nodemailer.createTransport({
+      service: "gmail",
+      auth: { user, pass },
+    });
+  };
+
+  module.exports = { generateSmartGateId, getMailTransporter };

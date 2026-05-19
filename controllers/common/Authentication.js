@@ -4,6 +4,11 @@ const { generateToken } = require("./generateToken");
 const { client } = require("../../config/client");
 const axios = require("axios");
 const path = require("path");
+
+const { getMailTransporter } = require("./uniqueId");
+
+
+
 const signup = async (req, res) => {
   try {
     const {
@@ -51,6 +56,8 @@ const signup = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
 const signin = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -148,23 +155,44 @@ const passwordReset = async (req, res) => {
     const { email} = req.body;
 
     const user = await client.query(
-      "SELECT * FROM admins WHERE email = $1",
+      "SELECT * FROM users WHERE email = $1",
       [email],
     );
+    console.log(user.rows[0])
+    // if (user.rows.length === 0) {
+    //   return res.status(400).json({ message: "User not found" });
+    // }
 
-    if (user.rows.length === 0) {
-      return res.status(400).json({ message: "User not found" });
-    }
+    const mail = getMailTransporter();
+    // if (!mail) {
+    //   return res.status(503).json({
+    //     message:
+    //       "Password reset email is not available: set EMAIL and EMAIL_PASSWORD (e.g. Gmail App Password) in the server environment.",
+    //   });
+    // }
 
     const token = generateToken({
       id: user.rows[0].id,
       role: user.rows[0].role,
     });
 
-    const link = `${process.env.FRONTEND_URL}/reset-password/token=${token}`;
+    await client.query(
+      "UPDATE users SET reset_token = $1, reset_token_expiry = $2 WHERE id = $3",
+      [token, new Date(Date.now() + 5 * 60 * 1000), user.rows[0].id],
+    );
 
-    res.status(200).json({ message: "Password reset successful", token, user: user.rows[0] });
-    
+    const link = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+
+    await mail.sendMail({
+      from: process.env.EMAIL,
+      to: email,
+      subject: "Password Reset",
+      text: `Click the link to reset your password: ${link}`,
+    });
+
+
+    res.status(200).json({ message: "Password reset successful"});
+
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Internal server error" });
