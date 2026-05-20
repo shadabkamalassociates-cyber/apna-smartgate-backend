@@ -186,7 +186,7 @@ const getInboxMessages = async (req, res) => {
     
       
           users.name as resident_name,
-          users.profile_image as resident_profile_image,
+          users.profile_image as resident_profile_image,33
           users.society_id
     
         FROM chats

@@ -7,6 +7,6 @@ eventRouter.post("/create", createEvent);
 eventRouter.get("/get", getEvents);
 eventRouter.put("/update", updateEvent);
 eventRouter.delete("/delete", deleteEvent);
-eventRouter.get("/get-by-society", getEventsBySociety);
+eventRouter.get("/get-by-society/:society_id", getEventsBySociety);
 
 module.exports = eventRouter;

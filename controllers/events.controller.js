@@ -104,7 +104,7 @@ const getEvents = async (req, res) => {
 
 const getEventsBySociety = async (req, res) => {
   try {
-    const society_id = req.query.society_id ?? req.params.society_id;
+    const {society_id} = req.params;
     if (!society_id) {
       return res.status(400).json({
         success: false,
