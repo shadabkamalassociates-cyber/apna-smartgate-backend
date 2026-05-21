@@ -41,7 +41,7 @@ const getResidentLedger = async (req, res) => {
   }
 };
 
-const fetchAllLedgers = async ()=>{
+const fetchAllLedgers = async (req,res)=>{
   try {
     const ledgers = await client.query(
       `

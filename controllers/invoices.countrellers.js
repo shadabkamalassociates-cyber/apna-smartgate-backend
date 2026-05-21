@@ -385,7 +385,7 @@ const getInvoiceById = async (req, res) => {
 
 
 
-const fetchAllInvoices = async ()=>{
+const fetchAllInvoices = async (req, res)=>{
   try {
     const invoices = await client.query(
       `
@@ -393,6 +393,10 @@ const fetchAllInvoices = async ()=>{
       FROM invoices
       `
     );
+    return res.status(200).json({
+      success: true,
+      data: invoices.rows
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
