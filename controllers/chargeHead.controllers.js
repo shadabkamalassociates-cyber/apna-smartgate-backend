@@ -1,31 +1,20 @@
-exports.createChargeHead = async (req, res) => {
+const { client } = require("../config/client");
+
+const createChargeHead = async (req, res) => {
   try {
 
-    const {
-      society_id,
-      name,
-      default_amount,
-      billing_cycle
-    } = req.body;
+    const { society_id, name, amount,charge_type, calculation_type,is_recurring } = req.body;
 
-    const result = await pool.query(
+    const result = await client.query(
       `
       INSERT INTO charge_heads (
-        society_id,
-        name,
-        default_amount,
-        billing_cycle,
-        active
+       society_id, name, amount,charge_type, calculation_type,is_recurring
       )
-      VALUES ($1,$2,$3,$4,$5)
+      VALUES ($1,$2,$3,$4,$5,$6)
       RETURNING *
       `,
       [
-        society_id,
-        name,
-        default_amount,
-        billing_cycle,
-        true
+        society_id, name, amount,charge_type, calculation_type,is_recurring
       ]
     );
 
@@ -43,4 +32,8 @@ exports.createChargeHead = async (req, res) => {
       message: 'Internal server error'
     });
   }
+};
+
+module.exports = {
+  createChargeHead
 };

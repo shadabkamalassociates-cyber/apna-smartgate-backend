@@ -37,6 +37,7 @@ const chatRoutes = require('./routers/chatRoutes')
 const maidRouter = require('./routers/maid.router')
 const { initSocket } = require('./controllers/common/socket')
 const authRouter = require('./routers/auth.routers')
+const billingRouter = require('./routers/billing.routers')
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -117,6 +118,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/notice", noticeRouter);
 app.use("/api/booking-vendors", bookingVendorsRouter);
 app.use("/api/events", eventsRouter);
+app.use("/api/billing", billingRouter);
 app.use("/api/chats", chatRoutes);
 // app.use("/api/amenities", amenitiesRouter);  
 

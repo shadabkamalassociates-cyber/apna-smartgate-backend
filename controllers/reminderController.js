@@ -1,8 +1,9 @@
+const { client } = require("../config/client");
 
-exports.sendDueReminders = async (req, res) => {
+const sendDueReminders = async (req, res) => {
   try {
 
-    const invoices = await pool.query(
+    const invoices = await client.query(
       `
       SELECT i.*, u.name, u.mobile
       FROM invoices i
@@ -40,4 +41,8 @@ exports.sendDueReminders = async (req, res) => {
       message: 'Internal server error'
     });
   }
+};
+
+module.exports = {
+  sendDueReminders
 };

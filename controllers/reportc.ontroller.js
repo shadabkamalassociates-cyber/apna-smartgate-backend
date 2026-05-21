@@ -1,10 +1,11 @@
+const { client } = require("../config/client");
 
-exports.getCollectionReport = async (req, res) => {
+const getCollectionReport = async (req, res) => {
   try {
 
     const { society_id } = req.params;
 
-    const result = await pool.query(
+    const result = await client.query(
       `
       SELECT
         COUNT(*) AS total_invoices,
@@ -31,4 +32,8 @@ exports.getCollectionReport = async (req, res) => {
       message: 'Internal server error'
     });
   }
+};
+
+module.exports = {
+  getCollectionReport
 };

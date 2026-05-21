@@ -1,20 +1,75 @@
+const { client } = require("../config/client");
+
 const generateMonthlyInvoices = async (req, res) => {
-  const client = await pool.connect();
+
+  // const client = await pool.connect();
 
   try {
-    await client.query('BEGIN');
 
-    const { society_id, billing_month, due_date } = req.body;
+    // await client.query("BEGIN");
+
+    const {
+      society_id,
+      resident_ids,
+      billing_month,
+      due_date,
+      invoice_type = "MAINTENANCE",
+      notes = "",
+      generated_by
+    } = req.body;
+
+    // ================================
+    // VALIDATIONS
+    // ================================
+
+    if (!society_id) {
+      return res.status(400).json({
+        success: false,
+        message: "society_id is required"
+      });
+    }
+
+    if (
+      !resident_ids ||
+      !Array.isArray(resident_ids) ||
+      resident_ids.length === 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "resident_ids is required"
+      });
+    }
+
+    // ================================
+    // CHECK RESIDENTS BELONG TO SOCIETY
+    // ================================
 
     const residentsQuery = await client.query(
       `
       SELECT id
       FROM users
       WHERE society_id = $1
-      AND role = 'RESIDENT'
+      AND id = ANY($2::uuid[])
       `,
-      [society_id]
+      [society_id, resident_ids]
     );
+
+    if (
+      residentsQuery.rows.length !== resident_ids.length
+    ) {
+
+      // await client.query("ROLLBACK");
+
+      return res.status(400).json({
+        success: false,
+        message:
+          "Some residents do not belong to this society"
+      });
+    }
+
+    // ================================
+    // FETCH ACTIVE CHARGE HEADS
+    // ================================
 
     const chargeHeadsQuery = await client.query(
       `
@@ -26,15 +81,75 @@ const generateMonthlyInvoices = async (req, res) => {
       [society_id]
     );
 
+    if (chargeHeadsQuery.rows.length === 0) {
+
+      // await client.query("ROLLBACK");
+// 
+      return res.status(400).json({
+        success: false,
+        message: "No active charge heads found"
+      });
+    }
+
+    const generatedInvoices = [];
+
+    // ================================
+    // LOOP RESIDENTS
+    // ================================
+
     for (const resident of residentsQuery.rows) {
+
+      // ================================
+      // CHECK DUPLICATE INVOICE
+      // ================================
+
+      const existingInvoice = await client.query(
+        `
+        SELECT id
+        FROM invoices
+        WHERE resident_id = $1
+        AND billing_month = $2
+        AND invoice_type = $3
+        LIMIT 1
+        `,
+        [
+          resident.id,
+          billing_month,
+          invoice_type
+        ]
+      );
+
+      if (existingInvoice.rows.length > 0) {
+        continue;
+      }
+
+      // ================================
+      // CALCULATE TOTAL
+      // ================================
 
       let subtotal = 0;
 
       for (const charge of chargeHeadsQuery.rows) {
-        subtotal += Number(charge.default_amount);
+
+        subtotal += Number(charge.amount);
       }
 
-      const total = subtotal;
+      const penalty = 0;
+      const tax = 0;
+
+      const total_amount =
+        subtotal + penalty + tax;
+
+      // ================================
+      // GENERATE INVOICE NUMBER
+      // ================================
+
+      const invoiceNumber =
+        `INV-${Date.now()}-${resident.id.slice(0,5)}`;
+
+      // ================================
+      // CREATE INVOICE
+      // ================================
 
       const invoiceResult = await client.query(
         `
@@ -45,25 +160,43 @@ const generateMonthlyInvoices = async (req, res) => {
           billing_month,
           due_date,
           subtotal,
+          penalty,
+          tax,
           total_amount,
-          status
+          status,
+          invoice_type,
+          notes,
+          generated_by
         )
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+        VALUES (
+          $1,$2,$3,$4,$5,
+          $6,$7,$8,$9,$10,
+          $11,$12,$13
+        )
         RETURNING *
         `,
         [
           society_id,
           resident.id,
-          `INV-${Date.now()}`,
+          invoiceNumber,
           billing_month,
           due_date,
           subtotal,
-          total,
-          'PENDING'
+          penalty,
+          tax,
+          total_amount,
+          "PENDING",
+          invoice_type,
+          notes,
+          generated_by
         ]
       );
 
       const invoice = invoiceResult.rows[0];
+
+      // ================================
+      // CREATE INVOICE ITEMS
+      // ================================
 
       for (const charge of chargeHeadsQuery.rows) {
 
@@ -82,11 +215,38 @@ const generateMonthlyInvoices = async (req, res) => {
             invoice.id,
             charge.id,
             charge.name,
-            charge.default_amount,
+            charge.amount,
             0
           ]
         );
       }
+
+      // ================================
+      // FETCH PREVIOUS BALANCE
+      // ================================
+
+      const balanceResult = await client.query(
+        `
+        SELECT balance
+        FROM ledgers
+        WHERE resident_id = $1
+        ORDER BY created_at DESC
+        LIMIT 1
+        `,
+        [resident.id]
+      );
+
+      const previousBalance =
+        balanceResult.rows.length > 0
+          ? Number(balanceResult.rows[0].balance)
+          : 0;
+
+      const newBalance =
+        previousBalance + total_amount;
+
+      // ================================
+      // CREATE LEDGER ENTRY
+      // ================================
 
       await client.query(
         `
@@ -96,40 +256,54 @@ const generateMonthlyInvoices = async (req, res) => {
           transaction_type,
           debit,
           credit,
-          balance
+          balance,
+          reference_type,
+          reference_id,
+          remarks
         )
-        VALUES ($1,$2,$3,$4,$5,$6)
+        VALUES (
+          $1,$2,$3,$4,$5,
+          $6,$7,$8,$9
+        )
         `,
         [
           resident.id,
           invoice.id,
-          'INVOICE',
-          total,
+          "INVOICE",
+          total_amount,
           0,
-          total
+          newBalance,
+          "INVOICE",
+          invoice.id,
+          `Invoice generated for ${billing_month}`
         ]
       );
+
+      generatedInvoices.push(invoice);
     }
 
-    await client.query('COMMIT');
+    // await client.query("COMMIT");
 
     return res.status(201).json({
       success: true,
-      message: 'Invoices generated successfully'
+      message: "Invoices generated successfully",
+      total_generated: generatedInvoices.length,
+      data: generatedInvoices
     });
 
   } catch (error) {
 
-    await client.query('ROLLBACK');
+    // await client.query("ROLLBACK");
 
     console.log(error);
 
     return res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: error.message
     });
 
   } finally {
+
     client.release();
   }
 };
@@ -139,7 +313,7 @@ const getResidentInvoices = async (req, res) => {
 
     const { resident_id } = req.params;
 
-    const invoices = await pool.query(
+    const invoices = await client.query(
       `
       SELECT *
       FROM invoices
@@ -209,8 +383,29 @@ const getInvoiceById = async (req, res) => {
   }
 };
 
+
+
+const fetchAllInvoices = async ()=>{
+  try {
+    const invoices = await client.query(
+      `
+      SELECT *
+      FROM invoices
+      `
+    );
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+}
+
+
 module.exports = {
   generateMonthlyInvoices,
   getResidentInvoices,
-  getInvoiceById
+  getInvoiceById,
+  fetchAllInvoices
 };
