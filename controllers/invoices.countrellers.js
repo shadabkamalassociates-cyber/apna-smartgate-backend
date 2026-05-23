@@ -311,7 +311,7 @@ const generateMonthlyInvoices = async (req, res) => {
 const getResidentInvoices = async (req, res) => {
   try {
 
-    const { resident_id } = req.params;
+    const { residentId } = req.params;
 
     const invoices = await client.query(
       `
@@ -320,7 +320,7 @@ const getResidentInvoices = async (req, res) => {
       WHERE resident_id = $1
       ORDER BY created_at DESC
       `,
-      [resident_id]
+      [residentId]
     );
 
     return res.status(200).json({
