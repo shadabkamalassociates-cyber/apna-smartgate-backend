@@ -342,7 +342,7 @@ const getResidentInvoices = async (req, res) => {
 const getInvoiceById = async (req, res) => {
   try {
 
-    const { invoice_id } = req.params;
+    const { invoiceId } = req.params;
 
     const invoice = await pool.query(
       `
@@ -350,7 +350,7 @@ const getInvoiceById = async (req, res) => {
       FROM invoices
       WHERE id = $1
       `,
-      [invoice_id]
+      [invoiceId]
     );
 
     const items = await pool.query(

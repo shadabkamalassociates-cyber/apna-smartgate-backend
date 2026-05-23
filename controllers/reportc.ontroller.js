@@ -3,7 +3,7 @@ const { client } = require("../config/client");
 const getCollectionReport = async (req, res) => {
   try {
 
-    const { society_id } = req.params;
+    const { societyId } = req.params;
 
     const result = await client.query(
       `
@@ -15,7 +15,7 @@ const getCollectionReport = async (req, res) => {
       FROM invoices
       WHERE society_id = $1
       `,
-      [society_id]
+      [societyId]
     );
 
     return res.status(200).json({
