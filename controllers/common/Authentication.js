@@ -169,6 +169,7 @@ const otpSenderForAdmin = async (req, res)=>{
 }
 
 
+
 const otpSenderForResident = async (req, res)=>{
   try {
     const { mobileNumber } = req.body;
@@ -282,4 +283,4 @@ const passwordReset = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 }
-module.exports = {signUpOtpSender , signin, signup, otpSenderForAdmin, passwordReset, otpSenderForResident, otpCheck };
+module.exports = { signUpOtpSender , signin, signup, otpSenderForAdmin, passwordReset, otpSenderForResident, otpCheck };
