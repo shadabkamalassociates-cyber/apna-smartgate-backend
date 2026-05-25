@@ -195,6 +195,31 @@ const otpSenderForResident = async (req, res)=>{
 }
 }
 
+const signUpOtpSender = async (req, res)=>{
+  try {
+    const { mobileNumber } = req.body;
+
+    const checkInResident = await client.query(
+      `SELECT * FROM users WHERE phone = $1`,
+      [mobileNumber]
+    )
+     
+    if(checkInResident.rows.length !== 0){
+      return res.status(400).json({ message: "Phone number already exist!" });
+    }
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    const whatsappUrl = `https://webhooks.wappblaster.com/webhook/67722d68ea04d946eaf743ac?number=91${mobileNumber}&otp=${otp}`;
+    await axios.post(whatsappUrl);
+    const salt = await bcrypt.genSalt(10);
+    const hashOTP = await bcrypt.hash(String(otp), salt);
+
+    res.status(200).json({ message: "OTP sent successfully",otp: hashOTP });
+
+} catch (error) {
+    console.log(error)
+    res.status(500).json({ message: "Internal server error" });
+}
+}
 
 const otpCheck = async (req, res)=>{
   try {
@@ -257,4 +282,4 @@ const passwordReset = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 }
-module.exports = { signin, signup, otpSenderForAdmin, passwordReset, otpSenderForResident, otpCheck };
+module.exports = {signUpOtpSender , signin, signup, otpSenderForAdmin, passwordReset, otpSenderForResident, otpCheck };
