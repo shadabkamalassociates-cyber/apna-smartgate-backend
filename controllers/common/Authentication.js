@@ -60,19 +60,26 @@ const signup = async (req, res) => {
 
 const signin = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    console.log(email,password)
+    const { phone, password } = req.body;
+    console.log(phone,password)
 
     const userResult = await client.query(
-      "SELECT * FROM admins WHERE email = $1",
-      [email],
+      "SELECT * FROM admins WHERE phone = $1",
+      [phone],
     );
-
+    
+    let dataCheckByPhone2; 
     if (userResult.rows.length === 0) {
-      return res.status(400).json({ message: "Invalid credentials!" });
+      dataCheckByPhone2 = await client.query(
+        "SELECT * FROM admins WHERE phone2 = $1",
+        [phone],
+      );
+      if(dataCheckByPhone2.rows.length === 0){
+        return res.status(400).json({ message: "Invalid phone number!" });
+      }
     }
 
-    const result = userResult.rows[0];
+    const result = userResult.rows[0] || dataCheckByPhone2.rows[0];
 
     if (result.is_verified === false) {
       return res.status(400).json({
@@ -135,19 +142,71 @@ const signin = async (req, res) => {
 };
 
 
-const otpSender = async (req, res)=>{
+const otpSenderForAdmin = async (req, res)=>{
     try {
         const { mobileNumber } = req.body;
+
+        const checkInAdmin = await client.query(
+          `SELECT * FROM admins WHERE phone = $1`,
+          [mobileNumber]
+        )
+         
+        if(checkInAdmin.rows.length === 0){
+          return res.status(400).json({ message: "Admin not found" });
+        }
         const otp = Math.floor(100000 + Math.random() * 900000);
         const whatsappUrl = `https://webhooks.wappblaster.com/webhook/67722d68ea04d946eaf743ac?number=91${mobileNumber}&otp=${otp}`;
         await axios.post(whatsappUrl);
+        const salt = await bcrypt.genSalt(10);
+        const hashOTP = await bcrypt.hash(String(otp), salt);
 
-        res.status(200).json({ message: "OTP sent successfully", otp });
+        res.status(200).json({ message: "OTP sent successfully",otp: hashOTP });
 
     } catch (error) {
         console.log(error)
         res.status(500).json({ message: "Internal server error" });
     }
+}
+
+
+const otpSenderForResident = async (req, res)=>{
+  try {
+    const { mobileNumber } = req.body;
+
+    const checkInResident = await client.query(
+      `SELECT * FROM users WHERE phone = $1`,
+      [mobileNumber]
+    )
+     
+    if(checkInResident.rows.length === 0){
+      return res.status(400).json({ message: "User not found" });
+    }
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    const whatsappUrl = `https://webhooks.wappblaster.com/webhook/67722d68ea04d946eaf743ac?number=91${mobileNumber}&otp=${otp}`;
+    await axios.post(whatsappUrl);
+    const salt = await bcrypt.genSalt(10);
+    const hashOTP = await bcrypt.hash(String(otp), salt);
+
+    res.status(200).json({ message: "OTP sent successfully",otp: hashOTP });
+
+} catch (error) {
+    console.log(error)
+    res.status(500).json({ message: "Internal server error" });
+}
+}
+
+
+const otpCheck = async (req, res)=>{
+  try {
+    const { hashOTP, otp } = req.body;
+    const matchOTP = await bcrypt.compare(otp, hashOTP);
+    if(!matchOTP){
+      return res.status(400).json({ message: "Invalid OTP!" });
+    }
+    res.status(200).json({ message: "OTP verified successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });  }
 }
 
 const passwordReset = async (req, res) => {
@@ -198,4 +257,4 @@ const passwordReset = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 }
-module.exports = { signin, signup, otpSender, passwordReset };
+module.exports = { signin, signup, otpSenderForAdmin, passwordReset, otpSenderForResident, otpCheck };
