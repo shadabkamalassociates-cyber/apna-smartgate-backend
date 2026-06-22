@@ -255,7 +255,7 @@ const otpCheck = async (req, res)=>{
     } 
 
 
-    res.status(200).json({ message: "OTP verified successfully", token: token });
+    res.status(200).json({ message: "OTP verified successfully", token: token,data: data });
     
   } catch (error) {
     console.log(error);
