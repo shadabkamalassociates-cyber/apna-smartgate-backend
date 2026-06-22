@@ -149,7 +149,7 @@ const getAllusers = async (req, res) => {
 
 const residentLogin = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email} = req.body;
     
   const result = await client.query(
     `
@@ -187,13 +187,13 @@ const residentLogin = async (req, res) => {
 
     const resident = result.rows[0];
 
-    const isMatch = await bcrypt.compare(password, resident.password);
-    if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid password!",
-      });
-    }
+    // const isMatch = await bcrypt.compare(password, resident.password);
+    // if (!isMatch) {
+    //   return res.status(401).json({
+    //     success: false,
+    //     message: "Invalid password!",
+    //   });
+    // }
 
     const token = generateToken({
       id: resident.id,
@@ -201,12 +201,12 @@ const residentLogin = async (req, res) => {
     });
 
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    // res.cookie("token", token, {
+    //   httpOnly: true,
+    //   secure: process.env.NODE_ENV === "production",
+    //   sameSite: "strict",
+    //   maxAge: 7 * 24 * 60 * 60 * 1000,
+    // });
 
     res.json({
       success: true,
@@ -484,7 +484,7 @@ const approval = async (req, res) => {
 module.exports = {
   validation,
   approval,
-  residentLogin,
+  // residentLogin,
   usersOnboard,
   fetchByFlatId,
   fetchBySociety,

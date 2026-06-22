@@ -3,7 +3,7 @@ const { protect } = require('../middlewares/protect');
 
 const {
   validation,
-  residentLogin,
+  // residentLogin,
   deleteResidentById,
   getAllusers,
   usersOnboard,
@@ -28,7 +28,7 @@ residentsRouter.post(
 
 residentsRouter.post("/validation", validation)
 
-residentsRouter.post("/login", residentLogin);
+// residentsRouter.post("/login", residentLogin);
     
 residentsRouter.get("/fetch",  getAllusers);
 

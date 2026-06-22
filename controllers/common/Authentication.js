@@ -160,7 +160,7 @@ const otpSenderForAdmin = async (req, res)=>{
         const salt = await bcrypt.genSalt(10);
         const hashOTP = await bcrypt.hash(String(otp), salt);
 
-        res.status(200).json({ message: "OTP sent successfully",otp: hashOTP });
+        res.status(200).json({ message: "OTP sent successfully", hashOTP });
 
     } catch (error) {
         console.log(error)
@@ -188,7 +188,7 @@ const otpSenderForResident = async (req, res)=>{
     const salt = await bcrypt.genSalt(10);
     const hashOTP = await bcrypt.hash(String(otp), salt);
 
-    res.status(200).json({ message: "OTP sent successfully",otp: hashOTP });
+    res.status(200).json({ message: "OTP sent successfully", hashOTP });
 
 } catch (error) {
     console.log(error)
@@ -214,7 +214,7 @@ const signUpOtpSender = async (req, res)=>{
     const salt = await bcrypt.genSalt(10);
     const hashOTP = await bcrypt.hash(String(otp), salt);
 
-    res.status(200).json({ message: "OTP sent successfully",otp: hashOTP });
+    res.status(200).json({ message: "OTP sent successfully", hashOTP });
 
 } catch (error) {
     console.log(error)
@@ -224,12 +224,39 @@ const signUpOtpSender = async (req, res)=>{
 
 const otpCheck = async (req, res)=>{
   try {
-    const { hashOTP, otp } = req.body;
+    const { hashOTP, otp, phone } = req.body;
+
+    const checkInResident = await client.query(
+      `SELECT * FROM users WHERE phone = $1`,
+      [phone]
+    )
+
+    if(checkInResident.rows.length === 0){
+      const matchOTP = await bcrypt.compare(otp, hashOTP);
+
+      if(!matchOTP){
+        return res.status(400).json({ message: "Invalid OTP!" });
+      }   
+
+      res.status(200).json({ message: "OTP verified successfully"});
+    }
+
+    const data = checkInResident.rows[0];
+
+    const token = generateToken({
+      id: data.id,
+      role: "resident",
+    }); 
+
     const matchOTP = await bcrypt.compare(otp, hashOTP);
+
     if(!matchOTP){
       return res.status(400).json({ message: "Invalid OTP!" });
-    }
-    res.status(200).json({ message: "OTP verified successfully" });
+    } 
+
+
+    res.status(200).json({ message: "OTP verified successfully", token: token });
+    
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Internal server error" });  }
