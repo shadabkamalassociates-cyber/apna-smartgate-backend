@@ -225,41 +225,68 @@ const signUpOtpSender = async (req, res)=>{
 const otpCheck = async (req, res)=>{
   try {
     const { hashOTP, otp, phone } = req.body;
-
+  
     const checkInResident = await client.query(
       `SELECT * FROM users WHERE phone = $1`,
       [phone]
-    )
-
-    if(checkInResident.rows.length === 0){
-      const matchOTP = await bcrypt.compare(otp, hashOTP);
-
-      if(!matchOTP){
-        return res.status(400).json({ message: "Invalid OTP!" });
-      }   
-
-      res.status(200).json({ message: "OTP verified successfully"});
+    );
+  
+    // Bypass for testing number
+    if (phone === "9289444951" || Number(phone) === 9289444951) {
+      if (checkInResident.rows.length === 0) {
+        return res.status(200).json({
+          message: "OTP verified successfully",
+        });
+      }
+  
+      const data = checkInResident.rows[0];
+  
+      const token = generateToken({
+        id: data.id,
+        role: "resident",
+      });
+  
+      return res.status(200).json({
+        message: "OTP verified successfully",
+        token,
+        data,
+      });
     }
-
+  
+    // Verify OTP for all other numbers
+    const matchOTP = await bcrypt.compare(otp, hashOTP);
+  
+    if (!matchOTP) {
+      return res.status(400).json({
+        message: "Invalid OTP!",
+      });
+    }
+  
+    if (checkInResident.rows.length === 0) {
+      return res.status(200).json({
+        message: "OTP verified successfully",
+      });
+    }
+  
     const data = checkInResident.rows[0];
-
+  
     const token = generateToken({
       id: data.id,
       role: "resident",
-    }); 
-
-    const matchOTP = await bcrypt.compare(otp, hashOTP);
-
-    if(!matchOTP){
-      return res.status(400).json({ message: "Invalid OTP!" });
-    } 
-
-
-    res.status(200).json({ message: "OTP verified successfully", token: token,data: data });
-    
+    });
+  
+    return res.status(200).json({
+      message: "OTP verified successfully",
+      token,
+      data,
+    });
+  
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Internal server error" });  }
+    console.error(error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
 }
 
 const passwordReset = async (req, res) => {
