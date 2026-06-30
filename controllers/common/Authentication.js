@@ -61,85 +61,110 @@ const signup = async (req, res) => {
 const signin = async (req, res) => {
   try {
     const { phone, password } = req.body;
-    console.log(phone,password)
-
-    const userResult = await client.query(
-      "SELECT * FROM admins WHERE phone = $1",
-      [phone],
-    );
-    
-    let dataCheckByPhone2; 
-    if (userResult.rows.length === 0) {
-      dataCheckByPhone2 = await client.query(
-        "SELECT * FROM admins WHERE phone2 = $1",
-        [phone],
-      );
-      if(dataCheckByPhone2.rows.length === 0){
-        return res.status(400).json({ message: "Invalid phone number!" });
-      }
-    }
-
-    const result = userResult.rows[0] || dataCheckByPhone2.rows[0];
-
-    if (result.is_verified === false) {
+    console.log(phone, password)
+    if (!phone || !password) {
       return res.status(400).json({
-        message:
-          "Your account is not verified, please check your email for verification!",
+        message: "Phone and password are required.",
       });
     }
-    
-    console.log(result);
-    const isMatch = await bcrypt.compare(password, result.password);
 
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid Password!" });
+    // Search by phone OR phone2
+    const userResult = await client.query(
+      `
+      SELECT *
+      FROM admins
+      WHERE phone = $1 OR phone2 = $1
+      LIMIT 1
+      `,
+      [phone]
+    );
+
+    console.log(userResult.rows)
+
+    if (userResult.rows.length === 0) {
+      return res.status(400).json({
+        message: "Invalid phone number or password.",
+      });
     }
 
+    const admin = userResult.rows[0];
+
+    // Check verification
+    if (!admin.is_verified) {
+      return res.status(400).json({
+        message:
+          "Your account is not verified. Please verify your account first.",
+      });
+    }
+
+    // Optional: Check if admin is active
+    if (admin.is_active === false) {
+      return res.status(403).json({
+        message: "Your account has been deactivated.",
+      });
+    }
+
+    // Optional: Check if admin is banned
+    if (admin.is_banned === true) {
+      return res.status(403).json({
+        message: "Your account has been banned.",
+      });
+    }
+
+    // Compare password
+    const isMatch = await bcrypt.compare(password, admin.password);
+
+    if (!isMatch) {
+      return res.status(400).json({
+        message: "Invalid phone number or password.",
+      });
+    }
+
+    // Generate JWT
     const token = generateToken({
-      id: result.id,
-      role: result.role,
-      email: result.email,
+      id: admin.id,
+      role: admin.role,
+      email: admin.email,
     });
 
-  // res.cookie("token", token, {
-  //   httpOnly: true,
-  //   secure: true,
-  //   sameSite: "strict",
-  //   maxAge: 30 * 24 * 60 * 60 * 1000, // 1 month
-  // });
+    const sameSite = process.env.COOKIE_SAMESITE || "lax";
+    const isProd = process.env.NODE_ENV === "production";
 
-  // Cookies are unreliable for cross-site browser requests (e.g. Vite on :5173 calling API on :5001).
-  // Prefer `Authorization: Bearer <token>` from the client for those cases.
-  // If you truly need cross-site cookies, set COOKIE_SAMESITE=none and serve HTTPS (secure cookies).
-  const sameSite = process.env.COOKIE_SAMESITE || "lax";
-  const isProd = process.env.NODE_ENV === "production";
-  // For local http dev, `Secure` cookies won't be sent to `http://localhost:PORT`.
-  // In production behind HTTPS, default `secure: true`.
-  // Note: `SameSite=None` requires `Secure=true` in modern browsers — use HTTPS locally if you need that.
-  const secureEnv = String(process.env.COOKIE_SECURE || "").toLowerCase();
-  const secure =
-    secureEnv === "true" ? true : secureEnv === "false" ? false : isProd;
+    const secureEnv = String(process.env.COOKIE_SECURE || "").toLowerCase();
+    const secure =
+      secureEnv === "true"
+        ? true
+        : secureEnv === "false"
+        ? false
+        : isProd;
 
-  res.cookie("token", token, {
-    httpOnly: true,
-    secure,
-    sameSite,
-    maxAge: 30 * 24 * 60 * 60 * 1000,
-  });
+    // Set Cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure,
+      sameSite,
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    });
 
+    // Remove password before sending response
+    const { password: hashedPassword, ...adminData } = admin;
 
-    res.status(200).json({
-      message: "Login successful",
+    return res.status(200).json({
+      success: true,
+      message: "Login successful.",
       token,
-      user: result,
+      user: adminData,
     });
-
-
   } catch (error) {
-    // console.log(error);
-    res.status(500).json({ message: "Server error" });
+    console.error("Signin Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
   }
 };
+
 
 
 const otpSenderForAdmin = async (req, res)=>{
