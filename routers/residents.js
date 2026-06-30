@@ -27,7 +27,7 @@ residentsRouter.post(
 );
 
 residentsRouter.post("/validation", validation)
-
+ 
 // residentsRouter.post("/login", residentLogin);
     
 residentsRouter.get("/fetch",  getAllusers);

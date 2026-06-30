@@ -54,50 +54,49 @@ const visitorsValidation = async (req, res) => {
 const getAllVisitors = async (req, res) => {
   try {
     const result = await client.query(`
-      SELECT 
+    SELECT
 json_build_object(
-  'id', v.id,
-  'name', v.name,
-  'phone', v.phone,
-  'vehicleinfo', v.vehicleinfo,
+    'id', v.id,
+    'name', v.name,
+    'phone', v.phone,
+    'vehicleinfo', v.vehicleinfo,
 
-  'resident', json_build_object(
-      'name', u.name,
-      'email', u.email,
-      'phone', u.phone,
-      'flat', json_build_object(
-          'flat_number', f.flat_number,
-          'floor', f.floor
-      ),
-      'society', json_build_object(
-          'name', s.name,
-          'address', s.address
-      ) 
-  ),
+    'resident', json_build_object(
+        'name', u.name,
+        'email', u.email,
+        'phone', u.phone,
+        'flat', json_build_object(
+            'flat_number', f.flat_number,
+            'floor', f.floor
+        ),
+        'society', json_build_object(
+            'name', s.name,
+            'address', s.address
+        )
+    ),
 
-  'attendance', json_build_object(
-      'check_in', va.check_in,
-      'check_out', va.check_out,
-      'status', va.status
-  )
-
+    'attendance', json_build_object(
+        'check_in', va.check_in,
+        'check_out', va.check_out,
+        'status', va.status
+    )
 ) AS visitor
 
 FROM visitors v
 
-LEFT JOIN visitor_attendance va 
-  ON v.id = va.visitor_id   -- 🔥 IMPORTANT FIX
+LEFT JOIN visitor_attendance va
+ON v.id = va.visitor_id
 
-LEFT JOIN users u 
-  ON va.resident_id = u.id  -- 🔥 CORRECT JOIN
+LEFT JOIN users u
+ON u.flat_id = va.flat_id
 
-LEFT JOIN flats f 
-  ON u.flat_id = f.id
+LEFT JOIN flats f
+ON va.flat_id = f.id
 
-LEFT JOIN societies s 
-  ON u.society_id = s.id
+LEFT JOIN societies s
+ON va.society_id = s.id
 
-ORDER BY v.id DESC;
+ORDER BY va.check_in DESC;
     `);
 
     res.json({
