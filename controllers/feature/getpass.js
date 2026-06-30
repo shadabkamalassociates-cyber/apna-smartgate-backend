@@ -1,5 +1,5 @@
 const { client } = require("../../config/client");
-const admin = require("../../config/firebase");
+const messaging = require("../../config/firebase");
 
 const sendResidenceAlert = async (req, res) => {
   try {
@@ -34,7 +34,7 @@ const sendResidenceAlert = async (req, res) => {
     }
 
     // console.log("++++++++++++++++++++++++++++++++",tokens)
-    const messaging = admin.messaging();
+    // const messaging = admin.messaging();
 
     // await messaging.sendEachForMulticast({
     //   tokens: tokens,
@@ -52,7 +52,7 @@ const sendResidenceAlert = async (req, res) => {
     //   },
     // });
 
-    await messaging.sendEachForMulticast({
+   await messaging.sendEachForMulticast({
       tokens: uniqueTokens,
       notification: {
         title: "Visitor Entry Request",

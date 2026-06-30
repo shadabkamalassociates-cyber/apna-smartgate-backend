@@ -70,7 +70,7 @@ const authMiddleware = (req, res, next) => {
   // const cookieToken = req.cookies?.token;
   // const headerToken = extractBearerToken(req);
   // const token = cookieToken || headerToken;
-  const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjhlMmNkYjU2LTY4Y2EtNDc3Ny04M2FiLWRlNzJhNmMxOTMwMyIsInJvbGUiOiJtYXN0ZXJfYWRtaW4iLCJpYXQiOjE3NzgxNDgyMjksImV4cCI6MTc3ODc1MzAyOX0.2dnqxiN22tFFXvgXOn3oAz1h81lN_mQpWlmk3pZqDlQ';
+  const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjhlMmNkYjU2LTY4Y2EtNDc3Ny04M2FiLWRlNzJhNmMxOTMwMyIsInJvbGUiOiJtYXN0ZXJfYWRtaW4iLCJpYXQiOjE3ODI4MTA1NzUsImV4cCI6MTc4MzQxNTM3NX0.SbihwcF0hXK7EfqQ9imIRdCNMeAHhZGNiG-yXvdZncc';
   if (!token) {
     return res.status(401).json({ message: "Unauthorized" });
   }
