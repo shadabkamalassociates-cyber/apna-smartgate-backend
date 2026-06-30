@@ -172,7 +172,7 @@ const otpSenderForAdmin = async (req, res)=>{
         const { mobileNumber } = req.body;
 
         const checkInAdmin = await client.query(
-          `SELECT * FROM admins WHERE phone = $1`,
+          `SELECT * FROM admins WHERE phone = $1 OR phone2 = $1`,
           [mobileNumber]
         )
          
