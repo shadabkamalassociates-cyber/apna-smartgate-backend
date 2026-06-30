@@ -60,9 +60,9 @@ const signup = async (req, res) => {
 
 const signin = async (req, res) => {
   try {
-    const { phone, password } = req.body;
-    console.log(phone, password)
-    if (!phone || !password) {
+    const { mobileNumber, password } = req.body;
+    console.log(mobileNumber, password)
+    if (!mobileNumber || !password) {
       return res.status(400).json({
         message: "Phone and password are required.",
       });
@@ -76,7 +76,7 @@ const signin = async (req, res) => {
       WHERE phone = $1 OR phone2 = $1
       LIMIT 1
       `,
-      [phone]
+      [mobileNumber]
     );
 
     console.log(userResult.rows)
