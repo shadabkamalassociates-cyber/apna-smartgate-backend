@@ -40,7 +40,7 @@ const secretaryProfileUpload = multer({
 });
 
 const ADMIN_PUBLIC_FIELDS =
-  "id, name, email, phone, role, society_id, profile_image,is_verified, is_active, created_at, updated_at, created_by";
+  "id, name, email, phone, role, society_id, profile_image, verification_status, is_active, created_at, updated_at, created_by";
 
 const signup = async (req, res) => {
   try {
@@ -258,16 +258,25 @@ const updateSecretary = async (req, res) => {
 const updateStatusSecretary = async (req, res) => {
   try {
     const { id } = req.params;
+    const { status } = req.body;
+    console.log(status,">>>>>>>>>>>>")
+    // Validate status
+    const allowedStatus = ["pending", "approved", "rejected"];
 
-    const values = [true, id];
+    if (!allowedStatus.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status. Allowed values are: pending, approved, rejected",
+      });
+    }
 
     const result = await client.query(
       `UPDATE admins
-       SET is_verified = $1,
+       SET verification_status = $1,
            updated_at = CURRENT_TIMESTAMP
        WHERE id = $2
        RETURNING ${ADMIN_PUBLIC_FIELDS}`,
-      values,
+      [status, id]
     );
 
     if (result.rowCount === 0) {
@@ -277,13 +286,17 @@ const updateStatusSecretary = async (req, res) => {
       });
     }
 
-    return res.json({
+    return res.status(200).json({
       success: true,
+      message: `Secretary ${status} successfully`,
       admin: result.rows[0],
     });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Failed to update admin" });
+    console.error("Update Secretary Status Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update secretary status",
+    });
   }
 };
 const deleteSecretary = async (req, res) => {

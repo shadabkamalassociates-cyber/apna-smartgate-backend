@@ -90,15 +90,20 @@ const signin = async (req, res) => {
     const admin = userResult.rows[0];
 
     // Check verification
-    if (!admin.is_verified) {
+    if (!admin.verification_status === 'pending') {
       return res.status(400).json({
         message:
-          "Your account is not verified. Please verify your account first.",
+          "Your account is pending. Please wait for verification.",
       });
     }
-
+    if (!admin.verification_status === 'rejected') {
+      return res.status(400).json({
+        message:
+          "Your account is Suspended. Please contact the administrator.",
+      });
+    }
     // Optional: Check if admin is active
-    if (admin.is_active === false) {
+    if (admin.verification_status === 'approved') {
       return res.status(403).json({
         message: "Your account has been deactivated.",
       });
