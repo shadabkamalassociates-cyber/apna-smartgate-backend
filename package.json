@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/KamalAssociate01/smart-society#readme",
   "dependencies": {
+    "apn": "^2.2.0",
     "axios": "^1.16.0",
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.1",

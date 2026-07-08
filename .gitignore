@@ -3,3 +3,4 @@ node_modules
 /generated/prisma
 config/*.json
 uploads
+AuthKey_8WQR7D522U.p8

@@ -50,13 +50,14 @@ const usersOnboard = async (req, res) => {
         message: req.fileValidationError,
       });
     }
-
+    console.log(req.body,"+++++++++++++++++++++++++++++++++++");
     const {
       name,
       email,
       password,
       phone_number,
       fcm_tokens,
+      voip_token,
       society_id,
       flat_id,
     } = req.body;
@@ -68,15 +69,16 @@ const usersOnboard = async (req, res) => {
     const hashPasword = await bcrypt.hash(password, 3);
 
     const result = await client.query(
-      `INSERT INTO users (name, email, password, phone, fcm_token, society_id, flat_id, profile_image)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING id, name, email, phone, fcm_token, society_id, flat_id, profile_image`,
+      `INSERT INTO users (name, email, password, phone, fcm_token,voip_token, society_id, flat_id, profile_image)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING id, name, email, phone, fcm_token,voip_token, society_id, flat_id, profile_image`,
       [
         name,
         email,
         hashPasword,
         phone_number,
         fcm_tokens,
+        voip_token,
         society_id,
         flat_id,
         profile_image,
