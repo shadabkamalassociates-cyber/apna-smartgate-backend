@@ -3,12 +3,12 @@ const apn = require("apn");                // APN library
 
 async function sendVoipPush(voipToken, callerName, phoneNumber) {
     const note = new apn.Notification();
-
-    note.topic = "com.kamalassociates.aapnasmartgate.dev";
+    console.log("*********************",note)
+    note.topic = "com.kamalassociates.aapnasmartgate.voip";
     note.pushType = "voip";
     note.priority = 10;
-
-    note.payload = {
+    console.log(voipToken, callerName, phoneNumber,"|||||||||||||||||||||||||||||||");
+    note.payload = {    
         callerName,
         handle: phoneNumber,
         hasVideo: false,
