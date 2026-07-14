@@ -53,32 +53,72 @@ const sendVoipPush = require("../../utils/sendVoipPush");
       //   },
       // });
 
-     await messaging.sendEachForMulticast({
-        tokens: uniqueTokens,
+    //  await messaging.sendEachForMulticast({
+    //     tokens: uniqueTokens,
+    //     notification: {
+    //       title: "Visitor Entry Request",
+    //       body: `${visitor.rows[0].name} is waiting at the gate`,
+    //     },
+    //     data: {
+    //       visitorId: String(visitorId),
+    //       actionType: "VISITOR_ENTRY",
+    //       flatId: String(id),
+    //     },
+    //     android: {
+    //       priority: "high",
+    //     },
+    //     apns: {
+    //       headers: {
+    //         "apns-priority": "10",
+    //       },
+    //       payload: {
+    //         aps: {
+    //           sound: "alert.mp3",
+    //           badge: 1,
+    //         },
+    //       },
+    //     },
+    //   });
+    await messaging.sendEachForMulticast({
+      tokens: uniqueTokens,
+    
+      notification: {
+        title: "Visitor Entry Request",
+        body: `${visitor.rows[0].name} is waiting at the gate`,
+      },
+    
+      data: {
+        visitorId: String(visitorId),
+        actionType: "VISITOR_ENTRY",
+        flatId: String(id),
+      },
+    
+      android: {
+        priority: "high",
         notification: {
-          title: "Visitor Entry Request",
-          body: `${visitor.rows[0].name} is waiting at the gate`,
-        },
-        data: {
-          visitorId: String(visitorId),
-          actionType: "VISITOR_ENTRY",
-          flatId: String(id),
-        },
-        android: {
+          channelId: "visitor_alert_channel", // 🔥 REQUIRED
+          sound: "mygate.mp3", // 🔥 no .mp3
           priority: "high",
         },
-        apns: {
-          headers: {
-            "apns-priority": "10",
-          },
-          payload: {
-            aps: {
-              sound: "alert.mp3",
-              badge: 1,
+      },
+    
+      apns: {
+        headers: {
+          "apns-priority": "10",
+        },
+        payload: {
+          aps: {
+            alert: {
+              title: "Visitor Entry Request",
+              body: `${visitor.rows[0].name} is waiting at the gate`,
             },
+            sound: "mygate.mp3",
+            badge: 1,
+            contentAvailable: true,
           },
         },
-      });
+      },
+    });
       res.json({
         success: true,
         message: "Notification sent successfully",
