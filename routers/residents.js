@@ -1,5 +1,5 @@
 const express = require('express');
-const { protect } = require('../middlewares/protect');
+const { protect, authMiddleware } = require('../middlewares/protect');
 
 const {
   validation,
@@ -11,6 +11,7 @@ const {
   fetchByFlatId,
   residentProfileUpload,
   approval,
+  restoreUser,
 } = require("../controllers/residents");
 
 const { checkAuthentication } = require('../controllers/guards');
@@ -34,7 +35,9 @@ residentsRouter.get("/fetch",  getAllusers);
 
 residentsRouter.get("/checkAuth",checkAuthentication)
 
-residentsRouter.delete("/delete/:id",  deleteResidentById);
+residentsRouter.delete("/delete/:id", authMiddleware, deleteResidentById);
+
+residentsRouter.delete('/restore/:id',restoreUser)
 
 residentsRouter.put("/approval/:id", approval)
 

@@ -314,38 +314,309 @@ const validation = async (req, res) => {
 };
 
 
-
 const deleteResidentById = async (req, res) => {
+  const { id } = req.params;
+  const { reason } = req.body;
+  const deletedBy = req.admin?.id; // Admin ID from auth middleware
+
+  const client = await pool.connect();
+
   try {
-    const { id } = req.params;
+    await client.query("BEGIN");
 
-    // const uuidRegex =
-    //   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-    // if (!uuidRegex.test(uuid)) {
-    //   return res
-    //     .status(400)
-    //     .json({ success: false, message: "Invalid resident ID" });
-    // }
-
-    const existing = await client.query(
-      "SELECT uuid FROM users WHERE id=$1",
-      [id],
+    const user = await client.query(
+      `SELECT id, is_deleted FROM users WHERE id = $1`,
+      [id]
     );
-    if (existing.rows.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Resident not found" });
+
+    if (user.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
     }
 
-    await client.query("DELETE FROM users WHERE id=$1", [uuid]);
+    if (user.rows[0].is_deleted) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({
+        success: false,
+        message: "User already deleted",
+      });
+    }
 
-    res
-      .status(200)
-      .json({ success: true, message: "Resident deleted successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: "Server error" });
+    await client.query(
+      `
+      UPDATE users
+      SET
+        is_deleted = true,
+        deleted_at = NOW()
+      WHERE id = $1
+      `,
+      [id]
+    );
+
+    await client.query(
+      `
+      INSERT INTO user_delete_history
+      (user_id, action, reason, deleted_by)
+      VALUES ($1,'DELETE',$2,$3)
+      `,
+      [id, reason || null, deletedBy || null]
+    );
+
+    await client.query("COMMIT");
+
+    res.json({
+      success: true,
+      message: "User deleted successfully",
+    });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error(err);
+
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  } finally {
+    client.release();
+  }
+};
+// const banUser = async (req, res) => {
+//   // const client = await pool.connect();
+
+//   try {
+//       const { userId } = req.params;
+//       const { reason } = req.body;
+//       const adminId = req.user.id;
+
+//       await client.query("BEGIN");
+
+//       const user = await client.query(
+//           "SELECT id, is_banned FROM users WHERE id = $1",
+//           [userId]
+//       );
+
+//       if (user.rows.length === 0) {
+//           await client.query("ROLLBACK");
+//           return res.status(404).json({
+//               success: false,
+//               message: "User not found",
+//           });
+//       }
+
+//       if (user.rows[0].is_banned) {
+//           await client.query("ROLLBACK");
+//           return res.status(400).json({
+//               success: false,
+//               message: "User already banned",
+//           });
+//       }
+
+//       await client.query(
+//           "UPDATE users SET is_banned = true WHERE id = $1",
+//           [userId]
+//       );
+
+//       await client.query(
+//           `INSERT INTO user_ban_history
+//           (user_id, action, reason, banned_by)
+//           VALUES ($1, 'BAN', $2, $3)`,
+//           [userId, reason, adminId]
+//       );
+
+//       await client.query("COMMIT");
+
+//       res.json({
+//           success: true,
+//           message: "User banned successfully",
+//       });
+
+//   } catch (err) {
+//       await client.query("ROLLBACK");
+//       console.error(err);
+
+//       res.status(500).json({
+//           success: false,
+//           message: err.message,
+//       });
+
+//   } finally {
+//       client.release();
+//   }
+// };
+
+// const unbanUser = async (req, res) => {
+
+//   const client = await pool.connect();
+
+//   try {
+
+//       const { userId } = req.params;
+//       const { reason } = req.body;
+//       const adminId = req.user.id;
+
+//       await client.query("BEGIN");
+
+//       const user = await client.query(
+//           "SELECT is_banned FROM users WHERE id=$1",
+//           [userId]
+//       );
+
+//       if (user.rows.length === 0) {
+//           await client.query("ROLLBACK");
+//           return res.status(404).json({ message: "User not found" });
+//       }
+
+//       await client.query(
+//           "UPDATE users SET is_banned=false WHERE id=$1",
+//           [userId]
+//       );
+
+//       await client.query(
+//           `INSERT INTO user_ban_history
+//           (user_id, action, reason, banned_by)
+//           VALUES ($1,'UNBAN',$2,$3)`,
+//           [userId, reason, adminId]
+//       );
+
+//       await client.query("COMMIT");
+
+//       res.json({
+//           success: true,
+//           message: "User unbanned successfully"
+//       });
+
+//   } catch (err) {
+
+//       await client.query("ROLLBACK");
+
+//       res.status(500).json({
+//           success: false,
+//           message: err.message
+//       });
+
+//   } finally {
+//       client.release();
+//   }
+
+// };
+
+
+// const deleteUser = async (req, res) => {
+
+//   const client = await pool.connect();
+
+//   try {
+
+//       const { userId } = req.params;
+//       const { reason } = req.body;
+//       const adminId = req.user.id;
+
+//       await client.query("BEGIN");
+
+//       await client.query(
+//           "UPDATE users SET is_deleted=true WHERE id=$1",
+//           [userId]
+//       );
+
+//       await client.query(
+//           `INSERT INTO user_delete_history
+//           (user_id, action, reason, deleted_by)
+//           VALUES ($1,'DELETE',$2,$3)`,
+//           [userId, reason, adminId]
+//       );
+
+//       await client.query("COMMIT");
+
+//       res.json({
+//           success: true,
+//           message: "User deleted successfully"
+//       });
+
+//   } catch (err) {
+
+//       await client.query("ROLLBACK");
+
+//       res.status(500).json({
+//           success: false,
+//           message: err.message
+//       });
+
+//   } finally {
+//       client.release();
+//   }
+
+// };
+
+
+const restoreUser = async (req, res) => {
+  const { id } = req.params;
+  const deletedBy = req.admin?.id;
+
+  // const client = await pool.connect(); 
+
+  try {
+    await client.query("BEGIN");
+
+    const user = await client.query(
+      `SELECT id, is_deleted FROM users WHERE id=$1`,
+      [id]
+    );
+
+    if (user.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (!user.rows[0].is_deleted) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({
+        success: false,
+        message: "User is not deleted",
+      });
+    }
+
+    await client.query(
+      `
+      UPDATE users
+      SET
+        is_deleted = false,
+        deleted_at = NULL
+      WHERE id=$1
+      `,
+      [id]
+    );
+
+    await client.query(
+      `
+      INSERT INTO user_delete_history
+      (user_id,action,deleted_by)
+      VALUES($1,'RESTORE',$2)
+      `,
+      [id, deletedBy || null]
+    );
+
+    await client.query("COMMIT");
+
+    res.json({
+      success: true,
+      message: "User restored successfully",
+    });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error(err);
+
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  } finally {
+    client.release();
   }
 };
 
@@ -492,6 +763,7 @@ module.exports = {
   fetchBySociety,
   deleteResidentById,
   getAllusers,
+  restoreUser,
   updateresident,
   residentProfileUpload,
 };

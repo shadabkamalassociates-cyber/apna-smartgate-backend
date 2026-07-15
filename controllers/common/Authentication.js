@@ -319,6 +319,31 @@ const otpCheck = async (req, res)=>{
   }
 }
 
+
+const guestLogin = async (req, res) => {
+  try {
+    const { name } = req.body;
+    const token = jwt.sign(
+      {
+          id: "86a34d9c-a727-4fc6-ab18-834c52aec851",
+          role: "guest",
+          isGuest: true
+      },
+      process.env.JWT_SECRET,
+      {
+          expiresIn: "24h"
+      }
+  );
+
+    res.status(200).json({ message: "Guest login successful", token });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+
 const passwordReset = async (req, res) => {
   try {
     const { email} = req.body;
@@ -367,4 +392,4 @@ const passwordReset = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 }
-module.exports = { signUpOtpSender , signin, signup, otpSenderForAdmin, passwordReset, otpSenderForResident, otpCheck };
+module.exports = {guestLogin, signUpOtpSender , signin, signup, otpSenderForAdmin, passwordReset, otpSenderForResident, otpCheck };
