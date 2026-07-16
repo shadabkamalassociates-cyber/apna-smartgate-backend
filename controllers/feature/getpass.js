@@ -79,15 +79,54 @@ const sendVoipPush = require("../../utils/sendVoipPush");
     //       },
     //     },
     //   });
+    // await messaging.sendEachForMulticast({
+    //   tokens: uniqueTokens,
+    
+    //   notification: {
+    //     title: "Visitor Entry Request",
+    //     body: `${visitor.rows[0].name} is waiting at the gate`,
+    //   },
+    
+    //   data: {
+    //     visitorId: String(visitorId),
+    //     actionType: "VISITOR_ENTRY",
+    //     flatId: String(id),
+    //   },
+    
+    //   android: {
+    //     priority: "high",
+    //     notification: {
+    //       channelId: "visitor_alert_channel", // 🔥 REQUIRED
+    //       sound: "mygate.mp3", // 🔥 no .mp3
+    //       priority: "high",
+    //     },
+    //   },
+    
+    //   apns: {
+    //     headers: {
+    //       "apns-priority": "10",
+    //     },
+    //     payload: {
+    //       aps: {
+    //         alert: {
+    //           title: "Visitor Entry Request",
+    //           body: `${visitor.rows[0].name} is waiting at the gate`,
+    //         },
+    //         sound: "mygate.mp3",
+    //         badge: 1,
+    //         contentAvailable: true,
+    //       },
+    //     },
+    //   },
+    // });
+
     await messaging.sendEachForMulticast({
       tokens: uniqueTokens,
     
-      notification: {
+      // No top-level notification
+      data: {
         title: "Visitor Entry Request",
         body: `${visitor.rows[0].name} is waiting at the gate`,
-      },
-    
-      data: {
         visitorId: String(visitorId),
         actionType: "VISITOR_ENTRY",
         flatId: String(id),
@@ -95,11 +134,6 @@ const sendVoipPush = require("../../utils/sendVoipPush");
     
       android: {
         priority: "high",
-        notification: {
-          channelId: "visitor_alert_channel", // 🔥 REQUIRED
-          sound: "mygate.mp3", // 🔥 no .mp3
-          priority: "high",
-        },
       },
     
       apns: {
@@ -112,7 +146,7 @@ const sendVoipPush = require("../../utils/sendVoipPush");
               title: "Visitor Entry Request",
               body: `${visitor.rows[0].name} is waiting at the gate`,
             },
-            sound: "mygate.mp3",
+            sound: "alert.mp3", // or "mygate.mp3" if that's the bundled sound
             badge: 1,
             contentAvailable: true,
           },

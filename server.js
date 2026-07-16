@@ -57,10 +57,9 @@ app.use(cors({
   origin: function (origin, callback) {
     const allowedOrigins = [
       "http://localhost:5173",
-      "https://admin.kamalhousing.com",
-      "https://kamalhousing.com",
-      "https://www.delhipropertybazaar.com",
-      "https://delhipropertybazaar.com",
+      "https://apnasmartgate.com",
+      "https://www.apnasmartgate.com",
+      "https://admin.apnasmartgate.com"
     ];
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);

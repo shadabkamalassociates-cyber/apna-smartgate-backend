@@ -455,7 +455,7 @@ const updateSocietyByOwner = async (req, res) => {
 const deleteSocietyById = async (req, res) => {
   try {
     const { id } = req.params;
-
+    
     const result = await client.query(
       `DELETE FROM societies
        WHERE id = $1
